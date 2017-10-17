@@ -10,7 +10,7 @@ struct Experiment
     double tR;
     double tEcho;
     double t90;
-    double t180;
+    double t180;hgfh
     double nEchoes;
     double nSamples;
 };
