@@ -67,7 +67,7 @@ void PulseAcquireThread::startExperiment()
     qDebug() << "nsamples = " << nsamples1;
     qDebug() << "duty90 = " << dutyCycle90;
 
-//#ifndef LINUX_BOX
+#ifndef LINUX_BOX
 
     taskRepetitions = taskRead = taskRFGate = taskTimer = taskAcqGate = 0;
 
@@ -137,7 +137,7 @@ void PulseAcquireThread::startExperiment()
     DAQmxStartTask( taskRFGate );
     DAQmxStartTask( taskAcqGate );
     DAQmxStartTask( taskRepetitions );
-//#endif
+#endif
 }
 
 void PulseAcquireThread::finishExperiment()
