@@ -31,7 +31,7 @@ MainWindow::MainWindow(QWidget *parent) :
     int maxHeight = screenGeometry.height();
     int maxWidth = screenGeometry.width();
 
-    int height = screenGeometry.height() * 0.8;
+    int height = screenGeometry.height() * 0.6;
     int width = screenGeometry.width() * 0.8;
 
     int border = getBorderThickness();
@@ -49,17 +49,21 @@ MainWindow::MainWindow(QWidget *parent) :
     mainWidget->show();
     QRect crMain = mainWidget->geometry();
 
-    buttonTab1 = createButton( mainWidget, "Experimento" );
+    QWidget * rowButtons = new QWidget( mainWidget );
+    rowButtons->setGeometry( width - 3 * widthButtons, 0, 3 * widthButtons, heightButtons );
+    rowButtons->show();
+
+    buttonTab1 = createButton( rowButtons, "Ejecución" );
     buttonTab1->setGeometry( 0, 0, widthButtons, heightButtons );
     buttonTab1->show();
     connect(buttonTab1, SIGNAL(clicked()), this, SLOT(on_buttonTab1_clicked()));
 
-    buttonTab2 = createButton( mainWidget, "Configuración" );
+    buttonTab2 = createButton( rowButtons, "Configuración" );
     buttonTab2->setGeometry( widthButtons + border, 0, widthButtons, heightButtons );
     buttonTab2->show();
     connect(buttonTab2, SIGNAL(clicked()), this, SLOT(on_buttonTab2_clicked()));
 
-    buttonTerminate = createButton( mainWidget, "Terminar" );
+    buttonTerminate = createButton( rowButtons, "Terminar" );
     buttonTerminate->setGeometry( widthButtons + widthButtons + 2 * border, 0, widthButtons, heightButtons );
     buttonTerminate->show();
     connect(buttonTerminate, SIGNAL(clicked()), this, SLOT(on_buttonTerminate_clicked()));
@@ -88,17 +92,17 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QRect crTop = tab1->geometry();
 
-    QLabel * labelSelect = new QLabel( rowTop );
-    labelSelect->setStyleSheet( QString( "font-size: %1px; font-weight: bold; color: #%2" )
+    labelHeader = new QLabel( rowTop );
+    labelHeader->setStyleSheet( QString( "font-size: %1px; font-weight: bold; color: #%2" )
                          .arg( Settings::getCustom( "label.fontSize", "24" ) )
                          .arg( Settings::getCustom( "label.color", "075B91" ) ) );
-    labelSelect->setText("Prepare la muestra y presione el botón correspondiente al experimento" );
-    labelSelect->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter );
-    labelSelect->setGeometry( 0, 0, crTab1.right(), heightButtons );
+    labelHeader->setText("Prepare la muestra y presione el botón correspondiente al experimento" );
+    labelHeader->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter );
+    labelHeader->setGeometry( 0, 0, crTab1.right(), 2 * heightButtons );
 
     rowSelectExperiment = new QWidget( rowTop );
     //rowSelectExperiment->setStyleSheet( "border: 1px solid black" );
-    rowSelectExperiment->setGeometry( 0, heightButtons, crTop.right(), heightButtons + 2 * border );
+    rowSelectExperiment->setGeometry( 0, 2 * heightButtons, crTop.right(), heightButtons );
     rowSelectExperiment->show();
 
     updateExperimentsButtons();
@@ -106,13 +110,13 @@ MainWindow::MainWindow(QWidget *parent) :
     QRect crSelect = rowSelectExperiment->geometry();
 
     buttonStop = createButton( rowTop, "Detener" );
-    buttonStop->setGeometry( 0, heightButtons, widthButtons, crSelect.height() );
+    buttonStop->setGeometry( 0, 2 * heightButtons, widthButtons, crSelect.height() );
     buttonStop->hide();
 
     connect(buttonStop, SIGNAL(clicked()), this, SLOT(on_buttonStop_clicked()));
 
     progressBar = new QProgressBar( rowTop );
-    progressBar->setGeometry( widthButtons + border, heightButtons, crTop.width() - widthButtons - 2 * border, heightButtons + 2 * border );
+    progressBar->setGeometry( widthButtons + border, 2 * heightButtons, crTop.width() - widthButtons - 2 * border, heightButtons);
     progressBar->hide();
 
     QWidget * rowBottom = new QWidget( tab1 );
@@ -247,6 +251,8 @@ void MainWindow::startExperiment( const QString & name )
     chartViewImag->show();
     chartViewMod->show();
 
+    labelHeader->setText("Presione el botón \"Detener\" para terminar el experimento" );
+
     timerId = startTimer( programmer1->getProgressTimer() );
 }
 
@@ -290,6 +296,8 @@ void MainWindow::timerEvent(QTimerEvent *event)
         rowSelectExperiment->show();
         buttonTab1->show();
         buttonTab2->show();
+
+        labelHeader->setText("Prepare la muestra y presione el botón correspondiente al experimento" );
     }
 }
 

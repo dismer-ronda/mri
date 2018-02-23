@@ -14,6 +14,7 @@ class CheckThread;
 #include <QProgressBar>
 #include <QListView>
 #include <QTextEdit>
+#include <QLabel>
 
 #include "experimentthread.h"
 
@@ -67,6 +68,8 @@ class MainWindow : public QMainWindow
     QTextEdit * editExperiments;
 
     bool experimentsChanged;
+
+    QLabel * labelHeader;
 
 public:
     static QString binDir;
