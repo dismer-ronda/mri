@@ -2,6 +2,8 @@
 #include <QLayout>
 #include <QMessageBox>
 #include <QStringListModel>
+#include <QScreen>
+#include <QPushButton>
 
 #include "settings.h"
 #include "mainwindow.h"
@@ -12,29 +14,173 @@
 QString MainWindow::binDir;
 
 MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    QMainWindow(parent)
 {
-    ui->setupUi(this);
-
+#ifndef LINUX_BOX
     binDir = "c:/mri";
+#else
+    binDir = "/opt/mri";
+#endif
 
     Settings::loadSettings( binDir + "/setup.ini" );
 
-    setWindowFlags(Qt::Dialog | Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowCloseButtonHint);
-    window()->showFullScreen();
+    QRect  screenGeometry = QGuiApplication::primaryScreen()->availableGeometry();
 
-    QRect cr = window()->geometry();
+    int height = screenGeometry.height();
+    int width = screenGeometry.width();
+    int border = getBorderThickness();
+    int heightButtons = 56;
+    int widthTab1 = 220;
+    int widthTab2 = 220;
+    int widthExit = 220;
 
-    QRect cr4 = ui->buttonTerminate->geometry();
-    ui->buttonTerminate->setGeometry( cr.right() - cr4.width() - 32, 8, cr4.width(), 56 );
+    setWindowFlags(Qt::FramelessWindowHint);
+    setGeometry(0, 0, width, height );
 
-    ui->tabWidget->setGeometry(32, 32, cr.right() - 64, cr.bottom() - 64);
-    cr = ui->tabWidget->geometry();
+    QWidget * mainWidget = new QWidget( this );
+    mainWidget->setGeometry( border, border, width - 2 * border, height - 2 * border );
+    mainWidget->show();
+    QRect crMain = mainWidget->geometry();
 
-    ui->tabWidget->setCurrentIndex(0);
+    buttonTab1 = createButton( mainWidget, "Experimento" );
+    buttonTab1->setGeometry( 0, 0, widthTab1, heightButtons );
+    buttonTab1->show();
+    connect(buttonTab1, SIGNAL(clicked()), this, SLOT(on_buttonTab1_clicked()));
 
-    QRect cr1 = ui->widgetProgramming->geometry();
+    buttonTab2 = createButton( mainWidget, "Configuración" );
+    buttonTab2->setGeometry( widthTab1 + border, 0, widthTab2, heightButtons );
+    buttonTab2->show();
+    connect(buttonTab2, SIGNAL(clicked()), this, SLOT(on_buttonTab2_clicked()));
+
+    buttonTerminate = createButton( mainWidget, "Terminar" );
+    buttonTerminate->setGeometry( widthTab1 + widthTab2 + 2 * border, 0, widthExit, heightButtons );
+    buttonTerminate->show();
+    connect(buttonTerminate, SIGNAL(clicked()), this, SLOT(on_buttonTerminate_clicked()));
+
+    QWidget * tabContents = new QWidget(mainWidget);
+    tabContents->setStyleSheet( QString( "font-size: %1px; font-weight: bold; color: #%2" )
+                         .arg( Settings::getCustom( "tab.fontSize", "24" ) )
+                         .arg( Settings::getCustom( "tab.color", "075B91" ) ) );
+    tabContents->setGeometry( 0, border + heightButtons, crMain.width(), crMain.height() - heightButtons - border );
+    tabContents->show();
+    QRect crContents = tabContents->geometry();
+
+    tab1 = new QWidget( tabContents );
+    tab1->setStyleSheet( QString( "font-size: %1px; font-weight: normal; background-color: #%2; color: #%3" )
+                         .arg( Settings::getCustom( "window.fontSize", "16" ) )
+                         .arg( Settings::getCustom( "window.background", "FFFFFF" ) )
+                         .arg( Settings::getCustom( "window.color", "075B91" ) ) );
+    tab1->setGeometry( 0, 0, crContents.right(), crContents.height() );
+    tab1->show();
+
+    tab2 = new QWidget( tabContents );
+    tab2->setStyleSheet( QString( "font-size: %1px; font-weight: bold; background-color: #%2; color: #%3" )
+                         .arg( Settings::getCustom( "window.fontSize", "16" ) )
+                         .arg( Settings::getCustom( "window.background", "FFFFFF" ) )
+                         .arg( Settings::getCustom( "window.color", "075B91" ) ) );
+    tab2->setGeometry( 0, 0, crContents.right(), crContents.height() );
+    tab2->hide();
+
+    QRect crTab1 = tab1->geometry();
+
+    QWidget * rowTop = new QWidget( tab1 );
+    //rowTop->setStyleSheet( "border: 1px solid red" );
+    rowTop->setGeometry( 0, 0, crTab1.width(), crTab1.height() / 2 );
+    rowTop->show();
+
+    QRect crTop = tab1->geometry();
+
+    QLabel * labelSelect = new QLabel( rowTop );
+    labelSelect->setStyleSheet( QString( "font-size: %1px; font-weight: bold; color: #%2" )
+                         .arg( Settings::getCustom( "label.fontSize", "24" ) )
+                         .arg( Settings::getCustom( "label.color", "075B91" ) ) );
+    labelSelect->setText("Prepare la muestra y presione el botón correspondiente al experimento" );
+    labelSelect->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter );
+    labelSelect->setGeometry( 0, 0, crTab1.right(), 64 );
+
+    rowSelectExperiment = new QWidget( rowTop );
+    //rowSelectExperiment->setStyleSheet( "border: 1px solid black" );
+    rowSelectExperiment->setGeometry( 0, 64, crTop.right(), heightButtons + 2 * border );
+    rowSelectExperiment->show();
+
+    experiments = Settings::getExperiments();
+
+    QRect crSelect = rowSelectExperiment->geometry();
+
+    int widthExperiment = crSelect.width() / experiments.size();
+
+    for ( int i = 0; i < experiments.size(); i++ )
+    {
+        QString text = experiments.at(i);
+
+        QPushButton * button = createButton( rowSelectExperiment, text );
+        button->setGeometry( i * widthExperiment, 0, widthExperiment - (i < experiments.size() - 1 ? border : 0), crSelect.height() );
+        button->show();
+
+        connect(button, SIGNAL(clicked()), this, SLOT(on_buttonStart_clicked()));
+
+        expButtons.append(button);
+    }
+
+    buttonStop = createButton( rowTop, "Detener" );
+    buttonStop->setGeometry( 0, 64, widthExit, crSelect.height() );
+    buttonStop->hide();
+
+    connect(buttonStop, SIGNAL(clicked()), this, SLOT(on_buttonStop_clicked()));
+
+    progressBar = new QProgressBar( rowTop );
+    progressBar->setGeometry( widthExit + border, 64, crTop.width() - widthExit - 2 * border, heightButtons + 2 * border );
+    progressBar->hide();
+
+    QWidget * rowBottom = new QWidget( tab1 );
+    rowBottom->setStyleSheet( "border: 1px solid red" );
+    rowBottom->setGeometry( 0, crTab1.height() / 2, crTab1.width(), crTab1.height()/2 );
+    rowBottom->show();
+
+    QRect cr5 = rowBottom->geometry();
+    int widthSignal = cr5.width() / 3;
+
+    chartReal = new QChart();
+    chartReal->legend()->hide();
+    chartReal->createDefaultAxes();
+    chartViewReal = new QChartView(chartReal, rowBottom);
+    chartViewReal->setRenderHint(QPainter::Antialiasing);
+    chartViewReal->setGeometry(0, 0, widthSignal, cr5.height() );
+    chartViewReal->show();
+
+    chartImag = new QChart();
+    chartImag->legend()->hide();
+    chartImag->createDefaultAxes();
+    chartViewImag = new QChartView(chartImag, rowBottom);
+    chartViewImag->setRenderHint(QPainter::Antialiasing);
+    chartViewImag->setGeometry(widthSignal, 0, widthSignal, cr5.height() );
+    chartViewImag->show();
+
+    chartMod = new QChart();
+    chartMod->legend()->hide();
+    chartMod->createDefaultAxes();
+    chartViewMod = new QChartView(chartMod, rowBottom);
+    chartViewMod->setRenderHint(QPainter::Antialiasing);
+    chartViewMod->setGeometry(2 * widthSignal, 0, widthSignal, cr5.height() );
+    chartViewMod->show();
+
+/*    QRect crRowExperiment = rowSelectExperiment->geometry();
+
+    QLabel * labelSelect = new QLabel( rowSelectExperiment );
+    labelSelect->setText("Prepare la muestra y presione el botón \"Iniciar\"" );
+    labelSelect->setGeometry( border, border, crTab1.right() - 2 * border, 32 );
+    labelSelect->show();
+
+    experiments = Settings::getExperiments();
+    model = new QStringListModel( experiments, NULL);
+
+    QComboBox * comboExperiments = new QComboBox(rowSelectExperiment );
+    comboExperiments->setModel( model );
+    comboExperiments->addItems( experiments );
+    comboExperiments->setCurrentText( Settings::getSelectdExperiment() );
+
+*/
+    /*QRect cr1 = ui->widgetProgramming->geometry();
     ui->widgetProgramming->setGeometry( (cr.width() - cr1.width())/2, (cr.height() - cr1.height())/2, cr1.width(), cr1.height());
 
     QCoreApplication::addLibraryPath( binDir );
@@ -81,7 +227,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     chartViewMod->setGeometry(2 * width, 0, width, cr5.height() );
     chartViewMod->show();
-
+*/
     programmer1 = NULL;
 
     series1 = NULL;
@@ -90,7 +236,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-    delete ui;
 }
 
 void MainWindow::setFinished( bool value )
@@ -131,13 +276,13 @@ QLineSeries * MainWindow::getChartSeries()
     return ret;
 }
 
-void MainWindow::startExperiment()
+void MainWindow::startExperiment( const QString & name )
 {
     setFinished(false);
 
     Experiment * experiment = new Experiment();
 
-    experiment->name = Settings::getSelectdExperiment();
+    experiment->name = name;
 
     experiment->tR = Settings::getExperimentParameter( experiment->name, "TR" ).toDouble();
     experiment->tEcho = Settings::getExperimentParameter( experiment->name, "TEcho" ).toDouble();
@@ -153,36 +298,32 @@ void MainWindow::startExperiment()
     programmer1 = new ProgrammerThread( MainWindow::binDir, experiment, this );
     programmer1->start();
 
-    ui->progressBar->setMinimum(0);
-    ui->progressBar->setMaximum( experiment->nRepetitions * (experiment->nEchoes == 0 ? 1 : experiment->nEchoes) );
-    ui->progressBar->setValue(0);
+    progressBar->setMinimum(0);
+    progressBar->setMaximum( experiment->nRepetitions * (experiment->nEchoes == 0 ? 1 : experiment->nEchoes) );
+    progressBar->setValue(0);
 
-    ui->buttonProgram->hide();
-    ui->progressBar->show();
-    ui->rowSelectExperiment->setEnabled(false);
-    ui->label_Programming->hide();
-    ui->buttonTerminate->hide();
-    ui->buttonStop->show();
-    ui->signalWidget->show();
+    buttonTerminate->hide();
+    rowSelectExperiment->hide();
+    buttonTab2->hide();
 
-    ui->tabWidget->setTabEnabled(1, false);
+    progressBar->show();
+    buttonStop->show();
+
+    //signalWidget->show();
+
+    //ui->tabWidget->setTabEnabled(1, false);
 
     timerId = startTimer(experiment->tR * 1000);
-}
-
-void MainWindow::on_buttonProgram_clicked()
-{
-    startExperiment();
 }
 
 void MainWindow::timerEvent(QTimerEvent *event)
 {
     if ( !isFinished() )
     {
-        int value = ui->progressBar->value() + 1;
-        int size = ui->progressBar->maximum();
+        int value = progressBar->value() + 1;
+        int size = progressBar->maximum();
         
-        ui->progressBar->setValue( value );
+        progressBar->setValue( value );
 
         QLineSeries * series = getChartSeries();
 
@@ -204,18 +345,13 @@ void MainWindow::timerEvent(QTimerEvent *event)
     {
         killTimer(timerId);
 
-        ui->label_Programming->setText("Prepare la muestra y presion el botón \"Iniciar\"");
-        ui->buttonProgram->show();
-        ui->progressBar->hide();
-        ui->rowSelectExperiment->setEnabled(true);
-        ui->label_Programming->show();
-        ui->tabWidget->setTabEnabled(1, true);
-        ui->buttonTerminate->show();
-        ui->buttonStop->hide();
-        ui->signalWidget->hide();
+        //label_Programming->setText("Prepare la muestra y presion el botón \"Iniciar\"");
+        progressBar->hide();
+        buttonStop->hide();
 
-        ui->tabWidget->setTabEnabled(1, true);
-        ui->tabWidget->setTabEnabled(2, true);
+        buttonTerminate->show();
+        rowSelectExperiment->show();
+        buttonTab2->show();
     }
 }
 
@@ -310,8 +446,29 @@ void MainWindow::on_comboExperiments_currentIndexChanged(const QString &arg1)
     Settings::setSelectedExperiment(arg1);
 }
 
+void MainWindow::on_buttonTab1_clicked()
+{
+    tab2->hide();
+    tab1->show();
+}
+
+void MainWindow::on_buttonTab2_clicked()
+{
+    tab1->hide();
+    tab2->show();
+}
+
+void MainWindow::on_buttonStart_clicked()
+{
+    QPushButton * button = (QPushButton *)QObject::sender();
+
+    qDebug() << "Start experiment" << button->text();
+
+    startExperiment( button->text() );
+}
+
 void MainWindow::on_buttonStop_clicked()
 {
     if ( programmer1 != NULL )
-        programmer1->setFinished(true);
+        programmer1->setFinished( true );
 }

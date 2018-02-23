@@ -47,6 +47,7 @@ void ProgrammerThread::run()
     while ( !isFinished() )
         QThread::msleep(100);
 
+#ifndef LINUX_BOX
     if (taskRead != 0)
     {
        qDebug() << "stop task read";
@@ -81,6 +82,7 @@ void ProgrammerThread::run()
        DAQmxStopTask (taskAcqGate );
        DAQmxClearTask (taskAcqGate );
     }
+#endif
 
     //delete dataDC;
     //delete dataFreq;
@@ -98,7 +100,9 @@ int32 CVICALLBACK EveryNCallback(TaskHandle taskHandle, int32 everyNsamplesEvent
     ProgrammerThread * thread = (ProgrammerThread*)callbackData;
 
     qDebug() << "reading " << nSamples << " samples";
+#ifndef LINUX_BOX
     DAQmxReadAnalogF64( taskHandle, nSamples, 0.1, DAQmx_Val_GroupByScanNumber, data, nSamples, &read, NULL );
+#endif
 
     bool ok = read != nSamples;
 
@@ -119,6 +123,7 @@ int32 CVICALLBACK EveryNCallback(TaskHandle taskHandle, int32 everyNsamplesEvent
 
 void ProgrammerThread::SpinEcho()
 {
+#ifndef LINUX_BOX
     double tr = experiment->tR;
     double tpulse90 = experiment->t90;
     double tpulse180 = experiment->t180;
@@ -256,6 +261,7 @@ void ProgrammerThread::SpinEcho()
     DAQmxStartTask( taskRFGate );
     DAQmxStartTask( taskAcqGate );
     DAQmxStartTask( taskRepetitions );
+#endif
 }
 
 MainWindow * ProgrammerThread::getParentWindow()

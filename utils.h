@@ -4,6 +4,7 @@
 #include <QList>
 #include <QString>
 #include <QWidget>
+#include <QPushButton>
 
 #include "types.h"
 
@@ -43,5 +44,15 @@ QString uniflashServicePackUpdate( QString binDir, QString port, QString capacit
 QString uniflashProgram( QString binDir, QString port, QString capacity  );
 
 QString uniflashFullProgram( QString binDir, QString port, QString capacity );
+
+int getResX();
+int getResY();
+/*int getMarginX();
+int getMarginY();*/
+int getDialogLineHeight();
+int getDialogButtonsHeight();
+int getBorderThickness();
+
+QPushButton * createButton( QWidget * parent, const QString & text );
 
 #endif // UTILS_H

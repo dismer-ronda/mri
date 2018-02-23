@@ -8,9 +8,9 @@
 #include <QThread>
 #include <QSettings>
 #include <QTcpSocket>
-#include <QSerialPortInfo>
 
 #include "utils.h"
+#include "settings.h"
 
 void WriteShort( BYTE * buffer, int offset, int value )
 {
@@ -345,3 +345,54 @@ QString uniflashFullProgram( QString binDir, QString port, QString capacity )
     return ret;
 }
 
+int getResX()
+{
+    return Settings::getCustom( "screenWidth", "1280" ).toInt();
+}
+
+int getResY()
+{
+    return Settings::getCustom( "screenHeight", "720" ).toInt();
+}
+
+int getMarginX()
+{
+    return Settings::getCustom( "marginX", "6" ).toInt();
+}
+
+int getMarginY()
+{
+    return Settings::getCustom( "marginY", "6" ).toInt();
+}
+
+int getHeadingWidth()
+{
+    return Settings::getCustom( "headingWidth", "40" ).toInt();
+}
+
+int getDialogLineHeight()
+{
+    return Settings::getCustom( "dialogLineHeight", "64" ).toInt();
+}
+
+int getDialogButtonsHeight()
+{
+    return Settings::getCustom( "dialogButtonsHeight", "96" ).toInt();
+}
+
+
+int getBorderThickness()
+{
+    return Settings::getCustom( "border.thickness", "6" ).toInt();
+}
+
+QPushButton * createButton( QWidget * parent, const QString & text )
+{
+    QPushButton * button = new QPushButton( parent );
+    button->setStyleSheet( QString( "font-size: %1px; font-weight: bold; background-color: #%2; color: #%3" )
+                         .arg( Settings::getCustom( "button.fontSize", "24" ) )
+                         .arg( Settings::getCustom( "button.background", "075B91" ) )
+                         .arg( Settings::getCustom( "button.color", "FFFFFF" ) ) );
+    button->setText( text );
+    return button;
+}

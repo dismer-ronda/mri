@@ -6,12 +6,12 @@ class ProgrammerThread;
 class CheckThread;
 
 #include <QMainWindow>
-#include <QSerialPortInfo>
 #include <QComboBox>
 #include <QMutex>
 #include <QStringListModel>
 #include <QtCharts/QLineSeries>
 #include <QtCharts/QChartView>
+#include <QProgressBar>
 
 #include "programmerthread.h"
 
@@ -44,7 +44,19 @@ class MainWindow : public QMainWindow
     QChart *chartMod;
     QChartView *chartViewMod;
 
+    QWidget * tab1;
+    QWidget * tab2;
 
+    QList<QPushButton*> expButtons;
+
+    QProgressBar * progressBar;
+
+    QPushButton * buttonTerminate;
+    QPushButton * buttonTab1;
+    QPushButton * buttonTab2;
+    QPushButton * buttonStop;
+
+    QWidget * rowSelectExperiment;
 public:
     static QString binDir;
 
@@ -57,19 +69,20 @@ public:
     void setChartSeries( QLineSeries * series );
     QLineSeries * getChartSeries();
 
-    void startExperiment();
+    void startExperiment( const QString & name );
 
 private slots:
-    void on_buttonProgram_clicked();
     void on_buttonTerminate_clicked();
+    void on_buttonTab1_clicked();
+    void on_buttonTab2_clicked();
+    void on_buttonStart_clicked();
+    void on_buttonStop_clicked();
 
     void on_buttonAdd_clicked();
     void on_buttonModify_clicked();
     void on_buttonDelete_clicked();
 
     void on_comboExperiments_currentIndexChanged(const QString &arg1);
-
-    void on_buttonStop_clicked();
 
 protected:
     void timerEvent(QTimerEvent *event);
