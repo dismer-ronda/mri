@@ -28,34 +28,39 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QRect  screenGeometry = QGuiApplication::primaryScreen()->availableGeometry();
 
-    int height = screenGeometry.height();
-    int width = screenGeometry.width();
+    int maxHeight = screenGeometry.height();
+    int maxWidth = screenGeometry.width();
+
+    int height = screenGeometry.height() * 0.8;
+    int width = screenGeometry.width() * 0.8;
+
     int border = getBorderThickness();
+
     int heightButtons = 56;
-    int widthTab1 = 220;
-    int widthTab2 = 220;
-    int widthExit = 220;
+    int widthButtons = 220;
 
     setWindowFlags(Qt::FramelessWindowHint);
-    setGeometry(0, 0, width, height );
+    setGeometry( 0, 0, maxWidth, maxHeight );
+    //setStyleSheet( "border: 2px solid black" );
 
     QWidget * mainWidget = new QWidget( this );
-    mainWidget->setGeometry( border, border, width - 2 * border, height - 2 * border );
+    //mainWidget->setStyleSheet( "border: none" );
+    mainWidget->setGeometry( (maxWidth - width)/2, (maxHeight - height)/2, width, height );
     mainWidget->show();
     QRect crMain = mainWidget->geometry();
 
     buttonTab1 = createButton( mainWidget, "Experimento" );
-    buttonTab1->setGeometry( 0, 0, widthTab1, heightButtons );
+    buttonTab1->setGeometry( 0, 0, widthButtons, heightButtons );
     buttonTab1->show();
     connect(buttonTab1, SIGNAL(clicked()), this, SLOT(on_buttonTab1_clicked()));
 
     buttonTab2 = createButton( mainWidget, "Configuración" );
-    buttonTab2->setGeometry( widthTab1 + border, 0, widthTab2, heightButtons );
+    buttonTab2->setGeometry( widthButtons + border, 0, widthButtons, heightButtons );
     buttonTab2->show();
     connect(buttonTab2, SIGNAL(clicked()), this, SLOT(on_buttonTab2_clicked()));
 
     buttonTerminate = createButton( mainWidget, "Terminar" );
-    buttonTerminate->setGeometry( widthTab1 + widthTab2 + 2 * border, 0, widthExit, heightButtons );
+    buttonTerminate->setGeometry( widthButtons + widthButtons + 2 * border, 0, widthButtons, heightButtons );
     buttonTerminate->show();
     connect(buttonTerminate, SIGNAL(clicked()), this, SLOT(on_buttonTerminate_clicked()));
 
@@ -68,9 +73,8 @@ MainWindow::MainWindow(QWidget *parent) :
     QRect crContents = tabContents->geometry();
 
     tab1 = new QWidget( tabContents );
-    tab1->setStyleSheet( QString( "font-size: %1px; font-weight: normal; background-color: #%2; color: #%3" )
+    tab1->setStyleSheet( QString( "font-size: %1px; font-weight: normal; color: #%2" )
                          .arg( Settings::getCustom( "window.fontSize", "16" ) )
-                         .arg( Settings::getCustom( "window.background", "FFFFFF" ) )
                          .arg( Settings::getCustom( "window.color", "075B91" ) ) );
     tab1->setGeometry( 0, 0, crContents.right(), crContents.height() );
     tab1->show();
@@ -90,11 +94,11 @@ MainWindow::MainWindow(QWidget *parent) :
                          .arg( Settings::getCustom( "label.color", "075B91" ) ) );
     labelSelect->setText("Prepare la muestra y presione el botón correspondiente al experimento" );
     labelSelect->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter );
-    labelSelect->setGeometry( 0, 0, crTab1.right(), 64 );
+    labelSelect->setGeometry( 0, 0, crTab1.right(), heightButtons );
 
     rowSelectExperiment = new QWidget( rowTop );
     //rowSelectExperiment->setStyleSheet( "border: 1px solid black" );
-    rowSelectExperiment->setGeometry( 0, 64, crTop.right(), heightButtons + 2 * border );
+    rowSelectExperiment->setGeometry( 0, heightButtons, crTop.right(), heightButtons + 2 * border );
     rowSelectExperiment->show();
 
     updateExperimentsButtons();
@@ -102,13 +106,13 @@ MainWindow::MainWindow(QWidget *parent) :
     QRect crSelect = rowSelectExperiment->geometry();
 
     buttonStop = createButton( rowTop, "Detener" );
-    buttonStop->setGeometry( 0, 64, widthExit, crSelect.height() );
+    buttonStop->setGeometry( 0, heightButtons, widthButtons, crSelect.height() );
     buttonStop->hide();
 
     connect(buttonStop, SIGNAL(clicked()), this, SLOT(on_buttonStop_clicked()));
 
     progressBar = new QProgressBar( rowTop );
-    progressBar->setGeometry( widthExit + border, 64, crTop.width() - widthExit - 2 * border, heightButtons + 2 * border );
+    progressBar->setGeometry( widthButtons + border, heightButtons, crTop.width() - widthButtons - 2 * border, heightButtons + 2 * border );
     progressBar->hide();
 
     QWidget * rowBottom = new QWidget( tab1 );
@@ -125,7 +129,7 @@ MainWindow::MainWindow(QWidget *parent) :
     chartViewReal = new QChartView(chartReal, rowBottom);
     chartViewReal->setRenderHint(QPainter::Antialiasing);
     chartViewReal->setGeometry(0, 0, widthSignal, cr5.height() );
-    chartViewReal->show();
+    chartViewReal->hide();
 
     chartImag = new QChart();
     chartImag->legend()->hide();
@@ -133,7 +137,7 @@ MainWindow::MainWindow(QWidget *parent) :
     chartViewImag = new QChartView(chartImag, rowBottom);
     chartViewImag->setRenderHint(QPainter::Antialiasing);
     chartViewImag->setGeometry(widthSignal, 0, widthSignal, cr5.height() );
-    chartViewImag->show();
+    chartViewImag->hide();
 
     chartMod = new QChart();
     chartMod->legend()->hide();
@@ -141,12 +145,11 @@ MainWindow::MainWindow(QWidget *parent) :
     chartViewMod = new QChartView(chartMod, rowBottom);
     chartViewMod->setRenderHint(QPainter::Antialiasing);
     chartViewMod->setGeometry(2 * widthSignal, 0, widthSignal, cr5.height() );
-    chartViewMod->show();
+    chartViewMod->hide();
 
     tab2 = new QWidget( tabContents );
-    tab2->setStyleSheet( QString( "font-size: %1px; font-weight: bold; background-color: #%2; color: #%3" )
+    tab2->setStyleSheet( QString( "font-size: %1px; font-weight: bold; color: #%2" )
                          .arg( Settings::getCustom( "window.fontSize", "16" ) )
-                         .arg( Settings::getCustom( "window.background", "FFFFFF" ) )
                          .arg( Settings::getCustom( "window.color", "075B91" ) ) );
     tab2->setGeometry( 0, 0, crContents.right(), crContents.height() );
     tab2->hide();
@@ -240,6 +243,10 @@ void MainWindow::startExperiment( const QString & name )
     progressBar->show();
     buttonStop->show();
 
+    chartViewReal->show();
+    chartViewImag->show();
+    chartViewMod->show();
+
     timerId = startTimer( programmer1->getProgressTimer() );
 }
 
@@ -271,6 +278,10 @@ void MainWindow::timerEvent(QTimerEvent *event)
     else
     {
         killTimer(timerId);
+
+        chartViewReal->hide();
+        chartViewImag->hide();
+        chartViewMod->hide();
 
         progressBar->hide();
         buttonStop->hide();
