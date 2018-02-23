@@ -45,8 +45,6 @@ void PulseAcquireThread::startExperiment()
 {
     double tr = Settings::getExperimentParameter( experiment, "TR" ).toDouble();
     double tpulse90 = Settings::getExperimentParameter( experiment, "T90" ).toDouble();
-    double tpulse180 = Settings::getExperimentParameter( experiment, "T180" ).toDouble();
-    int nexperiments = Settings::getExperimentParameter( experiment, "nEchoes" ).toInt();
     double nsamples1 = Settings::getExperimentParameter( experiment, "nSamples" ).toInt();
     double techo = Settings::getExperimentParameter( experiment, "TEcho" ).toDouble();
     int32 nrepetitions = Settings::getExperimentParameter( experiment, "nRepetitions" ).toInt();
@@ -59,21 +57,17 @@ void PulseAcquireThread::startExperiment()
     double Freqcount1 = 1/tr;
     double dutycyclecount1 = 5e-03/tr;
 
-    double dutyCycle180 = tpulse180/techo;
     double dutyCycle90 = tpulse90/tr;
 
     qDebug() << "tr = " << tr;
     qDebug() << "tpuse90 = " << tpulse90;
-    qDebug() << "tpulse180 = " << tpulse180;
     qDebug() << "techo = " << techo;
-    qDebug() << "nexperiments = " << nexperiments;
     qDebug() << "nrepetitions = " << nrepetitions;
     qDebug() << "sampleRate = " << sampleRate1;
     qDebug() << "nsamples = " << nsamples1;
     qDebug() << "duty90 = " << dutyCycle90;
-    qDebug() << "duty180 = " << dutyCycle180;
 
-#ifndef LINUX_BOX
+//#ifndef LINUX_BOX
 
     taskRepetitions = taskRead = taskRFGate = taskTimer = taskAcqGate = 0;
 
@@ -99,58 +93,18 @@ void PulseAcquireThread::startExperiment()
     dataDC[0] = 0.9999;
     qDebug() << dataFreq[0] << " " << dataDC[0];
 
-    if ( nexperiments > 0 )   // si nexperiments es 0, entonces es un solo pulso (pulse-acquire)
-    {
-        dataFreq[1] = 1/ ((tpulse180/2)+(techo/2)-(tpulse90/2));
-        dataDC[1] = tpulse180 / ((tpulse180/2)+(techo/2)-(tpulse90/2));
-        qDebug() << dataFreq[1] << " " << dataDC[1];
-    }
-
-
-
-    int32 temp = nexperiments + 1;
-
-    for( int i = 2; i < temp; i++ )
-    {
-        dataFreq[i] = 1 / (techo);
-        dataDC[i] = tpulse180 / (techo);
-        qDebug() << dataFreq[i] << " " << dataDC[i];
-    }
-
     DAQmxCreateTask( "taskRFGate", &taskRFGate );
     DAQmxCreateCOPulseChanFreq(taskRFGate,"Dev1/ctr2","",DAQmx_Val_Hz,DAQmx_Val_Low,InitialDelaycount2,dataFreq[0],dataDC[0]);
-    DAQmxCfgImplicitTiming( taskRFGate, DAQmx_Val_FiniteSamps, temp );
+    DAQmxCfgImplicitTiming( taskRFGate, DAQmx_Val_FiniteSamps, 1 );
     DAQmxCfgDigEdgeStartTrig( taskRFGate,"/Dev1/Ctr1InternalOutput", DAQmx_Val_Rising );
     DAQmxSetStartTrigRetriggerable( taskRFGate, TRUE );
-
-    int32 status = 1;  // If nexperiments = 0 (i.e. pulse acquire or GE), then no data is written to buffer, default pulse generated and status=1
-    if ( nexperiments > 0 )
-    {
-        status = DAQmxWriteCtrFreq(taskRFGate,temp,1,10.0,DAQmx_Val_GroupByChannel,dataFreq,dataDC,NULL,NULL);
-    }
-
-
-    qDebug() << "start task RFGate " << temp << " written " << status << " status" ;
-
-
 
     qDebug() << "create task Acquisition Gate";  //******** Importante: Enforce tacq < spacing betwen RF pulses to protect receiver
 
     double tacq = 1e-03;
     double InitialDelaycount3 = 0;
-    int32 nReadouts;
-    if (nexperiments > 0)
-    {
-        InitialDelaycount3 = tpulse90/2 + techo - (tacq/2);
-        nReadouts = nexperiments;
-    }
-    else
-    {
-        double ringdowndelay = 0.5e-03;
-        InitialDelaycount3 = tpulse90 + ringdowndelay;
-        nReadouts = 1;
-    }
-
+    double ringdowndelay = 0.5e-03;
+    InitialDelaycount3 = tpulse90 + ringdowndelay;
 
     double Freqcount3 = 1/techo;
     double dutycyclecount3 = tacq/techo;
@@ -159,7 +113,7 @@ void PulseAcquireThread::startExperiment()
     DAQmxCreateTask( "taskAcqGate", &taskAcqGate );
     DAQmxCreateCOPulseChanFreq( taskAcqGate, "Dev1/ctr3", "contador3", DAQmx_Val_Hz, DAQmx_Val_Low, InitialDelaycount3, Freqcount3, dutycyclecount3 );
 
-    DAQmxCfgImplicitTiming( taskAcqGate, DAQmx_Val_FiniteSamps, nReadouts );
+    DAQmxCfgImplicitTiming( taskAcqGate, DAQmx_Val_FiniteSamps, 1 );
     DAQmxCfgDigEdgeStartTrig( taskAcqGate, "/Dev1/Ctr1InternalOutput", DAQmx_Val_Rising );
     int32 status2 = DAQmxSetCOEnableInitialDelayOnRetrigger(taskAcqGate,"contador3", TRUE);
     DAQmxSetStartTrigRetriggerable( taskAcqGate, TRUE );
@@ -183,7 +137,7 @@ void PulseAcquireThread::startExperiment()
     DAQmxStartTask( taskRFGate );
     DAQmxStartTask( taskAcqGate );
     DAQmxStartTask( taskRepetitions );
-#endif
+//#endif
 }
 
 void PulseAcquireThread::finishExperiment()
