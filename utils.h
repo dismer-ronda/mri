@@ -55,4 +55,7 @@ int getBorderThickness();
 
 QPushButton * createButton( QWidget * parent, const QString & text );
 
+QString readTextFile( const QString & fileName );
+void writeTextFile( const QString & fileName, const QString & text );
+
 #endif // UTILS_H

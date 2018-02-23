@@ -13,6 +13,7 @@ class CheckThread;
 #include <QtCharts/QChartView>
 #include <QProgressBar>
 #include <QListView>
+#include <QTextEdit>
 
 #include "programmerthread.h"
 
@@ -63,7 +64,9 @@ class MainWindow : public QMainWindow
     QPushButton * buttonEdit;
     QPushButton * buttonDelete;
 
-    QListView * listExperiments;
+    QTextEdit * editExperiments;
+
+    bool experimentsChanged;
 
 public:
     static QString binDir;
@@ -90,6 +93,8 @@ private slots:
     void on_buttonAdd_clicked();
     void on_buttonModify_clicked();
     void on_buttonDelete_clicked();
+
+    void on_experimentsChanged();
 
     void on_comboExperiments_currentIndexChanged(const QString &arg1);
 

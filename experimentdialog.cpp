@@ -3,10 +3,9 @@
 #include "ui_experimentdialog.h"
 
 ExperimentDialog::ExperimentDialog(Experiment * experiment, bool editName, QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::ExperimentDialog)
+    QDialog(parent)
 {
-    ui->setupUi(this);
+    //ui->setupUi(this);
 
     setWindowFlags(Qt::Dialog | Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowCloseButtonHint);
 

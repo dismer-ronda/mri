@@ -9,6 +9,9 @@ class Settings
 public:
     Settings( const QString & fileName );
 
+    static QStringList getContents();
+    static void setContents( QStringList contents );
+
     static QVariant getSetting( QString setting, QVariant def );
 
     static void loadSettings( const QString & fileName );

@@ -10,6 +10,16 @@ Settings::Settings( const QString & fileName )
     settings->setIniCodec("UTF-8");
 }
 
+QStringList Settings::getContents()
+{
+    return instance->settings->allKeys();
+}
+
+void Settings::setContents( QStringList contents )
+{
+
+}
+
 void Settings::loadSettings( const QString & fileName )
 {
     Settings::instance = new Settings( fileName );

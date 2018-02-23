@@ -4,6 +4,7 @@
 #include <QStringListModel>
 #include <QScreen>
 #include <QPushButton>
+#include <QTextEdit>
 
 #include "settings.h"
 #include "mainwindow.h"
@@ -151,14 +152,14 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QRect crTab2 = tab2->geometry();
 
-    listExperiments = new QListView( tab2 );
-    listExperiments->setStyleSheet( QString( "border: 1px solid #%1; font-size: %2px; font-weight: bold" )
+    editExperiments = new QTextEdit( tab2 );
+    editExperiments->setStyleSheet( QString( "border: 1px solid #%1; font-size: %2px; font-weight: bold" )
                          .arg( Settings::getCustom( "window.color", "075B91" ) )
                          .arg( Settings::getCustom( "window.fontSize", "24" ) ) );
-    listExperiments->setGeometry( 0, 0, 256, 512 );
-    listExperiments->show();
+    editExperiments->setGeometry( 0, 0, crTab2.width(), crTab2.height() );
+    editExperiments->show();
 
-    model = new QStringListModel( Settings::getExperiments(), NULL);
+    /*model = new QStringListModel( Settings::getExperiments(), NULL);
     listExperiments->setModel( model );
 
     buttonAdd = createButton( tab2, "Addicionar" );
@@ -174,7 +175,7 @@ MainWindow::MainWindow(QWidget *parent) :
     buttonDelete = createButton( tab2, "Eliminar" );
     buttonDelete->setGeometry( border + 256, 2 * (heightButtons + border), widthTab1, heightButtons );
     buttonDelete->show();
-    connect(buttonDelete, SIGNAL(clicked()), this, SLOT(on_buttonDelete_clicked()));
+    connect(buttonDelete, SIGNAL(clicked()), this, SLOT(on_buttonDelete_clicked()));*/
 
 /*    QRect crRowExperiment = rowSelectExperiment->geometry();
 
@@ -244,6 +245,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     series1 = NULL;
     series2 = NULL;
+
+    experimentsChanged = false;
 }
 
 MainWindow::~MainWindow()
@@ -400,7 +403,7 @@ void MainWindow::on_buttonAdd_clicked()
 
 void MainWindow::on_buttonModify_clicked()
 {
-    int index = listExperiments->currentIndex().row();
+/*    int index = listExperiments->currentIndex().row();
 
     if ( index != -1 )
     {
@@ -428,12 +431,12 @@ void MainWindow::on_buttonModify_clicked()
             Settings::setExperimentParameter( experiment->name, "nSamples", QVariant( experiment->nSamples ) );
             Settings::setExperimentParameter( experiment->name, "nRepetitions", QVariant( experiment->nRepetitions ) );
         }
-    }
+    }*/
 }
 
 void MainWindow::on_buttonDelete_clicked()
 {
-    int index = listExperiments->currentIndex().row();
+   /* int index = listExperiments->currentIndex().row();
 
     if ( index != -1 )
     {
@@ -449,7 +452,7 @@ void MainWindow::on_buttonDelete_clicked()
 
             updateExperimentsButtons();
         }
-    }
+    }*/
 }
 
 void MainWindow::on_comboExperiments_currentIndexChanged(const QString &arg1)
@@ -462,10 +465,25 @@ void MainWindow::on_buttonTab1_clicked()
 {
     tab2->hide();
     tab1->show();
+
+    disconnect(editExperiments, SIGNAL(textChanged()));
+
+    if ( experimentsChanged )
+    {
+        writeTextFile( binDir + "/setup.ini", editExperiments->toPlainText() );
+
+        Settings::loadSettings( binDir + "/setup.ini" );
+
+        updateExperimentsButtons();
+    }
 }
 
 void MainWindow::on_buttonTab2_clicked()
 {
+    editExperiments->setText( readTextFile( binDir + "/setup.ini" ) );
+
+    connect(editExperiments, SIGNAL(textChanged()), this, SLOT(on_experimentsChanged()));
+
     tab1->hide();
     tab2->show();
 }
@@ -477,6 +495,12 @@ void MainWindow::on_buttonStart_clicked()
     qDebug() << "Start experiment" << button->text();
 
     startExperiment( button->text() );
+}
+
+void MainWindow::on_experimentsChanged()
+{
+    qDebug() << "experiments changed";
+    experimentsChanged = true;
 }
 
 void MainWindow::on_buttonStop_clicked()

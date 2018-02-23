@@ -396,3 +396,32 @@ QPushButton * createButton( QWidget * parent, const QString & text )
     button->setText( text );
     return button;
 }
+
+
+QString readTextFile( const QString & fileName )
+{
+    QFile file( fileName  );
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+        return "";
+
+    QString ret = "";
+    QTextStream in(&file);
+    while (!in.atEnd()) {
+        QString line = in.readLine();
+        ret += line + "\n";
+    }
+
+    return ret;
+}
+
+void writeTextFile( const QString & fileName, const QString & text )
+{
+    QFile file( fileName  );
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+        return ;
+
+    QTextStream out(&file);
+    out << text;
+    file.flush();
+    file.close();
+}
