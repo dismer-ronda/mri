@@ -73,14 +73,6 @@ MainWindow::MainWindow(QWidget *parent) :
     tab1->setGeometry( 0, 0, crContents.right(), crContents.height() );
     tab1->show();
 
-    tab2 = new QWidget( tabContents );
-    tab2->setStyleSheet( QString( "font-size: %1px; font-weight: bold; background-color: #%2; color: #%3" )
-                         .arg( Settings::getCustom( "window.fontSize", "16" ) )
-                         .arg( Settings::getCustom( "window.background", "FFFFFF" ) )
-                         .arg( Settings::getCustom( "window.color", "075B91" ) ) );
-    tab2->setGeometry( 0, 0, crContents.right(), crContents.height() );
-    tab2->hide();
-
     QRect crTab1 = tab1->geometry();
 
     QWidget * rowTop = new QWidget( tab1 );
@@ -103,24 +95,9 @@ MainWindow::MainWindow(QWidget *parent) :
     rowSelectExperiment->setGeometry( 0, 64, crTop.right(), heightButtons + 2 * border );
     rowSelectExperiment->show();
 
-    experiments = Settings::getExperiments();
+    updateExperimentsButtons();
 
     QRect crSelect = rowSelectExperiment->geometry();
-
-    int widthExperiment = crSelect.width() / experiments.size();
-
-    for ( int i = 0; i < experiments.size(); i++ )
-    {
-        QString text = experiments.at(i);
-
-        QPushButton * button = createButton( rowSelectExperiment, text );
-        button->setGeometry( i * widthExperiment, 0, widthExperiment - (i < experiments.size() - 1 ? border : 0), crSelect.height() );
-        button->show();
-
-        connect(button, SIGNAL(clicked()), this, SLOT(on_buttonStart_clicked()));
-
-        expButtons.append(button);
-    }
 
     buttonStop = createButton( rowTop, "Detener" );
     buttonStop->setGeometry( 0, 64, widthExit, crSelect.height() );
@@ -133,7 +110,7 @@ MainWindow::MainWindow(QWidget *parent) :
     progressBar->hide();
 
     QWidget * rowBottom = new QWidget( tab1 );
-    rowBottom->setStyleSheet( "border: 1px solid red" );
+    //rowBottom->setStyleSheet( "border: 1px solid red" );
     rowBottom->setGeometry( 0, crTab1.height() / 2, crTab1.width(), crTab1.height()/2 );
     rowBottom->show();
 
@@ -163,6 +140,41 @@ MainWindow::MainWindow(QWidget *parent) :
     chartViewMod->setRenderHint(QPainter::Antialiasing);
     chartViewMod->setGeometry(2 * widthSignal, 0, widthSignal, cr5.height() );
     chartViewMod->show();
+
+    tab2 = new QWidget( tabContents );
+    tab2->setStyleSheet( QString( "font-size: %1px; font-weight: bold; background-color: #%2; color: #%3" )
+                         .arg( Settings::getCustom( "window.fontSize", "16" ) )
+                         .arg( Settings::getCustom( "window.background", "FFFFFF" ) )
+                         .arg( Settings::getCustom( "window.color", "075B91" ) ) );
+    tab2->setGeometry( 0, 0, crContents.right(), crContents.height() );
+    tab2->hide();
+
+    QRect crTab2 = tab2->geometry();
+
+    listExperiments = new QListView( tab2 );
+    listExperiments->setStyleSheet( QString( "border: 1px solid #%1; font-size: %2px; font-weight: bold" )
+                         .arg( Settings::getCustom( "window.color", "075B91" ) )
+                         .arg( Settings::getCustom( "window.fontSize", "24" ) ) );
+    listExperiments->setGeometry( 0, 0, 256, 512 );
+    listExperiments->show();
+
+    model = new QStringListModel( Settings::getExperiments(), NULL);
+    listExperiments->setModel( model );
+
+    buttonAdd = createButton( tab2, "Addicionar" );
+    buttonAdd->setGeometry( border + 256, 0, widthTab1, heightButtons );
+    buttonAdd->show();
+    connect(buttonAdd, SIGNAL(clicked()), this, SLOT(on_buttonAdd_clicked()));
+
+    buttonEdit = createButton( tab2, "Modificar" );
+    buttonEdit->setGeometry( border + 256, heightButtons + border, widthTab1, heightButtons );
+    buttonEdit->show();
+    connect(buttonEdit, SIGNAL(clicked()), this, SLOT(on_buttonModify_clicked()));
+
+    buttonDelete = createButton( tab2, "Eliminar" );
+    buttonDelete->setGeometry( border + 256, 2 * (heightButtons + border), widthTab1, heightButtons );
+    buttonDelete->show();
+    connect(buttonDelete, SIGNAL(clicked()), this, SLOT(on_buttonDelete_clicked()));
 
 /*    QRect crRowExperiment = rowSelectExperiment->geometry();
 
@@ -304,6 +316,7 @@ void MainWindow::startExperiment( const QString & name )
 
     buttonTerminate->hide();
     rowSelectExperiment->hide();
+    buttonTab1->hide();
     buttonTab2->hide();
 
     progressBar->show();
@@ -351,6 +364,7 @@ void MainWindow::timerEvent(QTimerEvent *event)
 
         buttonTerminate->show();
         rowSelectExperiment->show();
+        buttonTab1->show();
         buttonTab2->show();
     }
 }
@@ -372,8 +386,7 @@ void MainWindow::on_buttonAdd_clicked()
         model->setStringList( experiments );
         Settings::setExperiments( experiments );
 
-        ui->comboExperiments->clear();
-        ui->comboExperiments->addItems(experiments);
+        updateExperimentsButtons();
 
         Settings::setExperimentParameter( experiment->name, "TR", QVariant( experiment->tR ) );
         Settings::setExperimentParameter( experiment->name, "TEcho", QVariant( experiment->tEcho ) );
@@ -387,7 +400,7 @@ void MainWindow::on_buttonAdd_clicked()
 
 void MainWindow::on_buttonModify_clicked()
 {
-    int index = ui->listExperiments->currentIndex().row();
+    int index = listExperiments->currentIndex().row();
 
     if ( index != -1 )
     {
@@ -420,7 +433,7 @@ void MainWindow::on_buttonModify_clicked()
 
 void MainWindow::on_buttonDelete_clicked()
 {
-    int index = ui->listExperiments->currentIndex().row();
+    int index = listExperiments->currentIndex().row();
 
     if ( index != -1 )
     {
@@ -434,8 +447,7 @@ void MainWindow::on_buttonDelete_clicked()
             model->setStringList( experiments );
             Settings::setExperiments( experiments );
 
-            ui->comboExperiments->clear();
-            ui->comboExperiments->addItems(experiments);
+            updateExperimentsButtons();
         }
     }
 }
@@ -471,4 +483,32 @@ void MainWindow::on_buttonStop_clicked()
 {
     if ( programmer1 != NULL )
         programmer1->setFinished( true );
+}
+
+void MainWindow::updateExperimentsButtons()
+{
+    int border = getBorderThickness();
+
+    for ( int i = 0; i < expButtons.size(); i++ )
+        delete expButtons.at(i);
+    expButtons.clear();
+
+    experiments = Settings::getExperiments();
+
+    QRect crSelect = rowSelectExperiment->geometry();
+
+    int widthExperiment = crSelect.width() / experiments.size();
+
+    for ( int i = 0; i < experiments.size(); i++ )
+    {
+        QString text = experiments.at(i);
+
+        QPushButton * button = createButton( rowSelectExperiment, text );
+        button->setGeometry( i * widthExperiment, 0, widthExperiment - (i < experiments.size() - 1 ? border : 0), crSelect.height() );
+        button->show();
+
+        connect(button, SIGNAL(clicked()), this, SLOT(on_buttonStart_clicked()));
+
+        expButtons.append(button);
+    }
 }

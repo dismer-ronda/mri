@@ -12,6 +12,7 @@ class CheckThread;
 #include <QtCharts/QLineSeries>
 #include <QtCharts/QChartView>
 #include <QProgressBar>
+#include <QListView>
 
 #include "programmerthread.h"
 
@@ -57,6 +58,13 @@ class MainWindow : public QMainWindow
     QPushButton * buttonStop;
 
     QWidget * rowSelectExperiment;
+
+    QPushButton * buttonAdd;
+    QPushButton * buttonEdit;
+    QPushButton * buttonDelete;
+
+    QListView * listExperiments;
+
 public:
     static QString binDir;
 
@@ -70,6 +78,7 @@ public:
     QLineSeries * getChartSeries();
 
     void startExperiment( const QString & name );
+    void updateExperimentsButtons();
 
 private slots:
     void on_buttonTerminate_clicked();
