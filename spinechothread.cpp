@@ -176,7 +176,7 @@ void SpinEchoThread::startExperiment()
     DAQmxCfgSampClkTiming( taskRead, "", sampleRate1, DAQmx_Val_Rising, DAQmx_Val_FiniteSamps, nsamples1 );
     DAQmxCfgDigEdgeStartTrig( taskRead, "/Dev1/Ctr3InternalOutput", DAQmx_Val_Rising );
     DAQmxSetStartTrigRetriggerable( taskRead, TRUE );
-    DAQmxRegisterEveryNSamplesEvent(taskRead, DAQmx_Val_Acquired_Into_Buffer, nsamples1, 0, SpinEchoThread, this );
+    DAQmxRegisterEveryNSamplesEvent(taskRead, DAQmx_Val_Acquired_Into_Buffer, nsamples1, 0, SpinEchoThreadCallback, this );
     qDebug() << "start task read";
 
    /* DAQmxStartTask( taskTimer );*/   // el timer no es la mejor forma de sincronizartareas los pulsos son muy estrechos para trigger
