@@ -52,19 +52,35 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboExperiments->addItems( experiments );
     ui->comboExperiments->setCurrentText( Settings::getSelectdExperiment() );
 
-    chart = new QChart();
-    chart->legend()->hide();
+    chartReal = new QChart();
+    chartReal->legend()->hide();
+    chartReal->createDefaultAxes();
+    chartViewReal = new QChartView(chartReal, ui->signalWidget);
+    chartViewReal->setRenderHint(QPainter::Antialiasing);
 
-    chart->createDefaultAxes();
-    //chart->setTitle("Simple line chart example");
+    chartImag = new QChart();
+    chartImag->legend()->hide();
+    chartImag->createDefaultAxes();
+    chartViewImag = new QChartView(chartImag, ui->signalWidget);
+    chartViewImag->setRenderHint(QPainter::Antialiasing);
 
-    chartView = new QChartView(chart, ui->signalWidget);
-    chartView->setRenderHint(QPainter::Antialiasing);
+    chartMod = new QChart();
+    chartMod->legend()->hide();
+    chartMod->createDefaultAxes();
+    chartViewMod = new QChartView(chartMod, ui->signalWidget);
+    chartViewMod->setRenderHint(QPainter::Antialiasing);
 
     QRect cr5 = ui->signalWidget->geometry();
-    chartView->setGeometry(0, 0, cr5.width(), cr5.height() );
+    int width = cr5.width() / 3;
 
-    chartView->show();
+    chartViewReal->setGeometry(0, 0, width, cr5.height() );
+    chartViewReal->show();
+
+    chartViewImag->setGeometry(width, 0, width, cr5.height() );
+    chartViewImag->show();
+
+    chartViewMod->setGeometry(2 * width, 0, width, cr5.height() );
+    chartViewMod->show();
 
     programmer1 = NULL;
 
@@ -129,15 +145,16 @@ void MainWindow::startExperiment()
     experiment->t180 = Settings::getExperimentParameter( experiment->name, "T180" ).toDouble();
     experiment->nEchoes = Settings::getExperimentParameter( experiment->name, "nEchoes" ).toInt();
     experiment->nSamples = Settings::getExperimentParameter( experiment->name, "nSamples" ).toInt();
+    experiment->nRepetitions = Settings::getExperimentParameter( experiment->name, "nRepetitions" ).toInt();
 
-    chart->removeAllSeries();
-    chartView->update();
+    chartReal->removeAllSeries();
+    chartViewReal->update();
 
     programmer1 = new ProgrammerThread( MainWindow::binDir, experiment, this );
     programmer1->start();
 
     ui->progressBar->setMinimum(0);
-    ui->progressBar->setMaximum(30);
+    ui->progressBar->setMaximum( experiment->nRepetitions * (experiment->nEchoes == 0 ? 1 : experiment->nEchoes) );
     ui->progressBar->setValue(0);
 
     ui->buttonProgram->hide();
@@ -150,7 +167,7 @@ void MainWindow::startExperiment()
 
     ui->tabWidget->setTabEnabled(1, false);
 
-    timerId = startTimer(1000);
+    timerId = startTimer(experiment->tR * 1000);
 }
 
 void MainWindow::on_buttonProgram_clicked()
@@ -164,16 +181,23 @@ void MainWindow::timerEvent(QTimerEvent *event)
     {
         int value = ui->progressBar->value() + 1;
         int size = ui->progressBar->maximum();
-        ui->progressBar->setValue( value == size + 1 ? 0 : value );
+        
+        ui->progressBar->setValue( value );
 
         QLineSeries * series = getChartSeries();
 
         if ( series->count() > 0 )
         {
-            chart->removeAllSeries();
-            chart->addSeries(series);
+            chartReal->removeAllSeries();
+            chartReal->addSeries(series);
 
-            chartView->update();
+            chartViewReal->update();
+        }
+
+        if ( value == size )
+        {
+            if ( programmer1 != NULL )
+                programmer1->setFinished(true);
         }
     }
     else
@@ -221,6 +245,7 @@ void MainWindow::on_buttonAdd_clicked()
         Settings::setExperimentParameter( experiment->name, "T180", QVariant( experiment->t180 ) );
         Settings::setExperimentParameter( experiment->name, "nEchoes", QVariant( experiment->nEchoes ) );
         Settings::setExperimentParameter( experiment->name, "nSamples", QVariant( experiment->nSamples ) );
+        Settings::setExperimentParameter( experiment->name, "nRepetitions", QVariant( experiment->nRepetitions ) );
     }
 }
 
@@ -240,6 +265,7 @@ void MainWindow::on_buttonModify_clicked()
         experiment->t180 = Settings::getExperimentParameter( experiment->name, "T180" ).toDouble();
         experiment->nEchoes = Settings::getExperimentParameter( experiment->name, "nEchoes" ).toInt();
         experiment->nSamples = Settings::getExperimentParameter( experiment->name, "nSamples" ).toInt();
+        experiment->nRepetitions = Settings::getExperimentParameter( experiment->name, "nRepetitions" ).toInt();
 
         ExperimentDialog dlg(experiment, false, this);
 
@@ -251,6 +277,7 @@ void MainWindow::on_buttonModify_clicked()
             Settings::setExperimentParameter( experiment->name, "T180", QVariant( experiment->t180 ) );
             Settings::setExperimentParameter( experiment->name, "nEchoes", QVariant( experiment->nEchoes ) );
             Settings::setExperimentParameter( experiment->name, "nSamples", QVariant( experiment->nSamples ) );
+            Settings::setExperimentParameter( experiment->name, "nRepetitions", QVariant( experiment->nRepetitions ) );
         }
     }
 }

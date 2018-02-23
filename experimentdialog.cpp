@@ -21,6 +21,7 @@ ExperimentDialog::ExperimentDialog(Experiment * experiment, bool editName, QWidg
     ui->editT180->setValue( experiment->t180 );
     ui->editEchoes->setValue( experiment->nEchoes );
     ui->editSamples->setValue( experiment->nSamples );
+    ui->editNRepetitions->setValue( experiment->nRepetitions );
 
     setWindowTitle( "Parámetros de experimento" );
 }
@@ -63,4 +64,9 @@ void ExperimentDialog::on_editEchoes_valueChanged(int arg1)
 void ExperimentDialog::on_editSamples_valueChanged(int arg1)
 {
     experiment->nSamples = arg1;
+}
+
+void ExperimentDialog::on_editNRepetitions_valueChanged(int arg1)
+{
+    experiment->nRepetitions = arg1;
 }

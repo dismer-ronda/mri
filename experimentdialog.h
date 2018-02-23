@@ -21,18 +21,13 @@ public:
 
 private slots:
     void on_editName_textEdited(const QString &arg1);
-
     void on_editTR_valueChanged(double arg1);
-
     void on_editTEcho_valueChanged(double arg1);
-
     void on_editT90_valueChanged(double arg1);
-
     void on_editT180_valueChanged(double arg1);
-
     void on_editEchoes_valueChanged(int arg1);
-
     void on_editSamples_valueChanged(int arg1);
+    void on_editNRepetitions_valueChanged(int arg1);
 
 private:
     Ui::ExperimentDialog *ui;

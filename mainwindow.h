@@ -35,8 +35,15 @@ class MainWindow : public QMainWindow
     QLineSeries * series1;
     QLineSeries * series2;
 
-    QChart *chart;
-    QChartView *chartView;
+    QChart *chartReal;
+    QChartView *chartViewReal;
+
+    QChart *chartImag;
+    QChartView *chartViewImag;
+
+    QChart *chartMod;
+    QChartView *chartViewMod;
+
 
 public:
     static QString binDir;

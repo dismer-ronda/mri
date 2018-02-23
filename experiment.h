@@ -13,6 +13,7 @@ struct Experiment
     double t180;
     double nEchoes;
     double nSamples;
+    int nRepetitions;
 };
 
 #endif // EXPERIMENT_H

@@ -98,7 +98,7 @@ int32 CVICALLBACK EveryNCallback(TaskHandle taskHandle, int32 everyNsamplesEvent
     ProgrammerThread * thread = (ProgrammerThread*)callbackData;
 
     qDebug() << "reading " << nSamples << " samples";
-    DAQmxReadAnalogF64( taskHandle, nSamples, 10.0, DAQmx_Val_GroupByScanNumber, data, nSamples, &read, NULL );
+    DAQmxReadAnalogF64( taskHandle, nSamples, 0.1, DAQmx_Val_GroupByScanNumber, data, nSamples, &read, NULL );
 
     bool ok = read != nSamples;
 
@@ -125,7 +125,8 @@ void ProgrammerThread::SpinEcho()
     int nexperiments = experiment->nEchoes;
     double nsamples1 = experiment->nSamples;
     double techo = experiment->tEcho;
-    double timer = 50.0e+06;
+    int32 nrepetitions = experiment->nRepetitions;
+    //double timer = 50.0e+06;
     double sampleRate1 = 1024;
 
     double InitialDelaycount1 = 0;
@@ -141,6 +142,7 @@ void ProgrammerThread::SpinEcho()
     qDebug() << "tpulse180 = " << tpulse180;
     qDebug() << "techo = " << techo;
     qDebug() << "nexperiments = " << nexperiments;
+    qDebug() << "nrepetitions = " << nrepetitions;
     qDebug() << "sampleRate = " << sampleRate1;
     qDebug() << "nsamples = " << nsamples1;
     qDebug() << "duty90 = " << dutyCycle90;
@@ -155,11 +157,11 @@ void ProgrammerThread::SpinEcho()
 
     qDebug() << "create taskCounter repetitions";
 
-    int32 Nrepetitions = 30;
+
 
     DAQmxCreateTask( "taskRepetitions", &taskRepetitions );
     DAQmxCreateCOPulseChanFreq( taskRepetitions, "Dev1/ctr1", "", DAQmx_Val_Hz, DAQmx_Val_Low, InitialDelaycount1, Freqcount1, dutycyclecount1 );
-    DAQmxCfgImplicitTiming( taskRepetitions, DAQmx_Val_FiniteSamps, Nrepetitions );
+    DAQmxCfgImplicitTiming( taskRepetitions, DAQmx_Val_FiniteSamps, nrepetitions );
     /* DAQmxCfgDigEdgeStartTrig( taskRepetitions, "/Dev1/Ctr0InternalOutput", DAQmx_Val_Rising ); */
 
 
@@ -167,7 +169,7 @@ void ProgrammerThread::SpinEcho()
     qDebug() << "create taskRFGate";
 
     dataFreq[0] = 1 / tpulse90;
-    dataDC[0] = 0.999;
+    dataDC[0] = 0.9999;
     qDebug() << dataFreq[0] << " " << dataDC[0];
 
     if ( nexperiments > 0 )   // si nexperiments es 0, entonces es un solo pulso (pulse-acquire)
