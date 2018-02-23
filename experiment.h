@@ -6,6 +6,7 @@
 struct Experiment
 {
     QString name;
+    QString type;
 
     double tR;
     double tEcho;

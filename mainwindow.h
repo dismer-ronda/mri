@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 
 class MainWindow;
-class ProgrammerThread;
+class ExperimentThread;
 class CheckThread;
 
 #include <QMainWindow>
@@ -15,7 +15,7 @@ class CheckThread;
 #include <QListView>
 #include <QTextEdit>
 
-#include "programmerthread.h"
+#include "experimentthread.h"
 
 QT_CHARTS_USE_NAMESPACE
 
@@ -30,7 +30,7 @@ class MainWindow : public QMainWindow
     bool finished;
     QMutex mutex;
     int timerId;
-    ProgrammerThread * programmer1;
+    ExperimentThread * programmer1;
     QStringList experiments;
     QStringListModel * model;
 
@@ -85,18 +85,14 @@ public:
 
 private slots:
     void on_buttonTerminate_clicked();
+
     void on_buttonTab1_clicked();
     void on_buttonTab2_clicked();
+
     void on_buttonStart_clicked();
     void on_buttonStop_clicked();
 
-    void on_buttonAdd_clicked();
-    void on_buttonModify_clicked();
-    void on_buttonDelete_clicked();
-
     void on_experimentsChanged();
-
-    void on_comboExperiments_currentIndexChanged(const QString &arg1);
 
 protected:
     void timerEvent(QTimerEvent *event);

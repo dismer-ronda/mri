@@ -9,8 +9,9 @@
 #include "settings.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "programmerthread.h"
-#include "experimentdialog.h"
+#include "experimentthread.h"
+#include "pulseacquirethread.h"
+#include "spinechothread.h"
 
 QString MainWindow::binDir;
 
@@ -155,92 +156,10 @@ MainWindow::MainWindow(QWidget *parent) :
     editExperiments = new QTextEdit( tab2 );
     editExperiments->setStyleSheet( QString( "border: 1px solid #%1; font-size: %2px; font-weight: bold" )
                          .arg( Settings::getCustom( "window.color", "075B91" ) )
-                         .arg( Settings::getCustom( "window.fontSize", "24" ) ) );
+                         .arg( Settings::getCustom( "window.fontSize", "18" ) ) );
     editExperiments->setGeometry( 0, 0, crTab2.width(), crTab2.height() );
     editExperiments->show();
 
-    /*model = new QStringListModel( Settings::getExperiments(), NULL);
-    listExperiments->setModel( model );
-
-    buttonAdd = createButton( tab2, "Addicionar" );
-    buttonAdd->setGeometry( border + 256, 0, widthTab1, heightButtons );
-    buttonAdd->show();
-    connect(buttonAdd, SIGNAL(clicked()), this, SLOT(on_buttonAdd_clicked()));
-
-    buttonEdit = createButton( tab2, "Modificar" );
-    buttonEdit->setGeometry( border + 256, heightButtons + border, widthTab1, heightButtons );
-    buttonEdit->show();
-    connect(buttonEdit, SIGNAL(clicked()), this, SLOT(on_buttonModify_clicked()));
-
-    buttonDelete = createButton( tab2, "Eliminar" );
-    buttonDelete->setGeometry( border + 256, 2 * (heightButtons + border), widthTab1, heightButtons );
-    buttonDelete->show();
-    connect(buttonDelete, SIGNAL(clicked()), this, SLOT(on_buttonDelete_clicked()));*/
-
-/*    QRect crRowExperiment = rowSelectExperiment->geometry();
-
-    QLabel * labelSelect = new QLabel( rowSelectExperiment );
-    labelSelect->setText("Prepare la muestra y presione el botón \"Iniciar\"" );
-    labelSelect->setGeometry( border, border, crTab1.right() - 2 * border, 32 );
-    labelSelect->show();
-
-    experiments = Settings::getExperiments();
-    model = new QStringListModel( experiments, NULL);
-
-    QComboBox * comboExperiments = new QComboBox(rowSelectExperiment );
-    comboExperiments->setModel( model );
-    comboExperiments->addItems( experiments );
-    comboExperiments->setCurrentText( Settings::getSelectdExperiment() );
-
-*/
-    /*QRect cr1 = ui->widgetProgramming->geometry();
-    ui->widgetProgramming->setGeometry( (cr.width() - cr1.width())/2, (cr.height() - cr1.height())/2, cr1.width(), cr1.height());
-
-    QCoreApplication::addLibraryPath( binDir );
-
-    ui->progressBar->hide();
-    ui->buttonProgram->show();
-    ui->buttonStop->hide();
-    ui->rowSelectExperiment->setEnabled(true);
-    ui->signalWidget->hide();
-
-    experiments = Settings::getExperiments();
-    model = new QStringListModel( experiments, NULL);
-    ui->listExperiments->setModel( model );
-
-    ui->comboExperiments->addItems( experiments );
-    ui->comboExperiments->setCurrentText( Settings::getSelectdExperiment() );
-
-    chartReal = new QChart();
-    chartReal->legend()->hide();
-    chartReal->createDefaultAxes();
-    chartViewReal = new QChartView(chartReal, ui->signalWidget);
-    chartViewReal->setRenderHint(QPainter::Antialiasing);
-
-    chartImag = new QChart();
-    chartImag->legend()->hide();
-    chartImag->createDefaultAxes();
-    chartViewImag = new QChartView(chartImag, ui->signalWidget);
-    chartViewImag->setRenderHint(QPainter::Antialiasing);
-
-    chartMod = new QChart();
-    chartMod->legend()->hide();
-    chartMod->createDefaultAxes();
-    chartViewMod = new QChartView(chartMod, ui->signalWidget);
-    chartViewMod->setRenderHint(QPainter::Antialiasing);
-
-    QRect cr5 = ui->signalWidget->geometry();
-    int width = cr5.width() / 3;
-
-    chartViewReal->setGeometry(0, 0, width, cr5.height() );
-    chartViewReal->show();
-
-    chartViewImag->setGeometry(width, 0, width, cr5.height() );
-    chartViewImag->show();
-
-    chartViewMod->setGeometry(2 * width, 0, width, cr5.height() );
-    chartViewMod->show();
-*/
     programmer1 = NULL;
 
     series1 = NULL;
@@ -295,26 +214,22 @@ void MainWindow::startExperiment( const QString & name )
 {
     setFinished(false);
 
-    Experiment * experiment = new Experiment();
+    QString type = Settings::getExperimentParameter( name, "Type" ).toString();
 
-    experiment->name = name;
+    qDebug() << type;
 
-    experiment->tR = Settings::getExperimentParameter( experiment->name, "TR" ).toDouble();
-    experiment->tEcho = Settings::getExperimentParameter( experiment->name, "TEcho" ).toDouble();
-    experiment->t90 = Settings::getExperimentParameter( experiment->name, "T90" ).toDouble();
-    experiment->t180 = Settings::getExperimentParameter( experiment->name, "T180" ).toDouble();
-    experiment->nEchoes = Settings::getExperimentParameter( experiment->name, "nEchoes" ).toInt();
-    experiment->nSamples = Settings::getExperimentParameter( experiment->name, "nSamples" ).toInt();
-    experiment->nRepetitions = Settings::getExperimentParameter( experiment->name, "nRepetitions" ).toInt();
+    if ( type.compare( "PulseAcquire" ) == 0 )
+        programmer1 = new PulseAcquireThread( MainWindow::binDir, name, this );
+    else if ( type.compare("SpinEcho") == 0 )
+        programmer1 = new SpinEchoThread( MainWindow::binDir, name, this );
 
     chartReal->removeAllSeries();
     chartViewReal->update();
 
-    programmer1 = new ProgrammerThread( MainWindow::binDir, experiment, this );
     programmer1->start();
 
     progressBar->setMinimum(0);
-    progressBar->setMaximum( experiment->nRepetitions * (experiment->nEchoes == 0 ? 1 : experiment->nEchoes) );
+    progressBar->setMaximum( programmer1->getProgressCount() );
     progressBar->setValue(0);
 
     buttonTerminate->hide();
@@ -325,11 +240,7 @@ void MainWindow::startExperiment( const QString & name )
     progressBar->show();
     buttonStop->show();
 
-    //signalWidget->show();
-
-    //ui->tabWidget->setTabEnabled(1, false);
-
-    timerId = startTimer(experiment->tR * 1000);
+    timerId = startTimer( programmer1->getProgressTimer() );
 }
 
 void MainWindow::timerEvent(QTimerEvent *event)
@@ -361,7 +272,6 @@ void MainWindow::timerEvent(QTimerEvent *event)
     {
         killTimer(timerId);
 
-        //label_Programming->setText("Prepare la muestra y presion el botón \"Iniciar\"");
         progressBar->hide();
         buttonStop->hide();
 
@@ -375,90 +285,6 @@ void MainWindow::timerEvent(QTimerEvent *event)
 void MainWindow::on_buttonTerminate_clicked()
 {
     QApplication::quit();
-}
-
-void MainWindow::on_buttonAdd_clicked()
-{
-    Experiment * experiment = new Experiment();
-
-    ExperimentDialog dlg(experiment, true, this);
-
-    if ( dlg.exec() == QDialog::Accepted )
-    {
-        experiments.append( experiment->name );
-        model->setStringList( experiments );
-        Settings::setExperiments( experiments );
-
-        updateExperimentsButtons();
-
-        Settings::setExperimentParameter( experiment->name, "TR", QVariant( experiment->tR ) );
-        Settings::setExperimentParameter( experiment->name, "TEcho", QVariant( experiment->tEcho ) );
-        Settings::setExperimentParameter( experiment->name, "T90", QVariant( experiment->t90 ) );
-        Settings::setExperimentParameter( experiment->name, "T180", QVariant( experiment->t180 ) );
-        Settings::setExperimentParameter( experiment->name, "nEchoes", QVariant( experiment->nEchoes ) );
-        Settings::setExperimentParameter( experiment->name, "nSamples", QVariant( experiment->nSamples ) );
-        Settings::setExperimentParameter( experiment->name, "nRepetitions", QVariant( experiment->nRepetitions ) );
-    }
-}
-
-void MainWindow::on_buttonModify_clicked()
-{
-/*    int index = listExperiments->currentIndex().row();
-
-    if ( index != -1 )
-    {
-        Experiment * experiment = new Experiment();
-
-        experiment->name = experiments.at(index);
-
-        experiment->tR = Settings::getExperimentParameter( experiment->name, "TR" ).toDouble();
-        experiment->tEcho = Settings::getExperimentParameter( experiment->name, "TEcho" ).toDouble();
-        experiment->t90 = Settings::getExperimentParameter( experiment->name, "T90" ).toDouble();
-        experiment->t180 = Settings::getExperimentParameter( experiment->name, "T180" ).toDouble();
-        experiment->nEchoes = Settings::getExperimentParameter( experiment->name, "nEchoes" ).toInt();
-        experiment->nSamples = Settings::getExperimentParameter( experiment->name, "nSamples" ).toInt();
-        experiment->nRepetitions = Settings::getExperimentParameter( experiment->name, "nRepetitions" ).toInt();
-
-        ExperimentDialog dlg(experiment, false, this);
-
-        if ( dlg.exec() == QDialog::Accepted )
-        {
-            Settings::setExperimentParameter( experiment->name, "TR", QVariant( experiment->tR ) );
-            Settings::setExperimentParameter( experiment->name, "TEcho", QVariant( experiment->tEcho ) );
-            Settings::setExperimentParameter( experiment->name, "T90", QVariant( experiment->t90 ) );
-            Settings::setExperimentParameter( experiment->name, "T180", QVariant( experiment->t180 ) );
-            Settings::setExperimentParameter( experiment->name, "nEchoes", QVariant( experiment->nEchoes ) );
-            Settings::setExperimentParameter( experiment->name, "nSamples", QVariant( experiment->nSamples ) );
-            Settings::setExperimentParameter( experiment->name, "nRepetitions", QVariant( experiment->nRepetitions ) );
-        }
-    }*/
-}
-
-void MainWindow::on_buttonDelete_clicked()
-{
-   /* int index = listExperiments->currentIndex().row();
-
-    if ( index != -1 )
-    {
-        QMessageBox::StandardButton reply = QMessageBox::question( this, "Confirmar", "¿Confirma que desea eliminar el experimento?",
-                                        QMessageBox::Yes|QMessageBox::No);
-        if (reply == QMessageBox::Yes)
-        {
-            Settings::deleteExperiment( experiments.at( index ) );
-
-            experiments.removeAt( index );
-            model->setStringList( experiments );
-            Settings::setExperiments( experiments );
-
-            updateExperimentsButtons();
-        }
-    }*/
-}
-
-void MainWindow::on_comboExperiments_currentIndexChanged(const QString &arg1)
-{
-    qDebug() << "selectedExperiment " << arg1;
-    Settings::setSelectedExperiment(arg1);
 }
 
 void MainWindow::on_buttonTab1_clicked()
@@ -499,7 +325,6 @@ void MainWindow::on_buttonStart_clicked()
 
 void MainWindow::on_experimentsChanged()
 {
-    qDebug() << "experiments changed";
     experimentsChanged = true;
 }
 

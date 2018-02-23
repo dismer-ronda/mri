@@ -4,9 +4,9 @@
 #
 #-------------------------------------------------
 
-QT       += core gui network serialport charts
+QT       += core gui network charts
 
-LIBS += -L$$PWD/./ -lNIDAQmx
+#LIBS += -L$$PWD/./ -lNIDAQmx
 
 INCLUDEPATH += $$PWD/.
 DEPENDPATH += $$PWD/.
@@ -20,7 +20,7 @@ TEMPLATE = app
 # any feature of Qt which as been marked as deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the
 # deprecated API in order to know how to port your code away from it.
-DEFINES += QT_DEPRECATED_WARNINGS
+DEFINES += QT_DEPRECATED_WARNINGS LINUX_BOX
 
 # You can also make your code fail to compile if you use deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -30,19 +30,20 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    programmerthread.cpp \
     settings.cpp \
     utils.cpp \
-    experimentdialog.cpp
+    experimentthread.cpp \
+    pulseacquirethread.cpp \
+    spinechothread.cpp
 
 HEADERS  += mainwindow.h \
     NIDAQmx.h \
-    programmerthread.h \
     settings.h \
     types.h \
     utils.h \
-    experimentdialog.h \
-    experiment.h
+    experiment.h \
+    pulseacquirethread.h \
+    experimentthread.h \
+    spinechothread.h
 
-FORMS    += mainwindow.ui \
-    experimentdialog.ui
+FORMS    +=

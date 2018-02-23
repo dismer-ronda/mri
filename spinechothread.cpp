@@ -2,102 +2,24 @@
 
 #include <QDebug>
 
-#include "programmerthread.h"
+#include "spinechothread.h"
 #include "mainwindow.h"
 #include "settings.h"
 
 int32 CVICALLBACK EveryNCallback(TaskHandle taskHandle, int32 everyNsamplesEventType, uInt32 nSamples, void *callbackData);
 
-ProgrammerThread::ProgrammerThread( QString binDir, Experiment * experiment, MainWindow * parent )
+SpinEchoThread::SpinEchoThread( QString binDir, const QString & experiment, MainWindow * parent )
+    : ExperimentThread( binDir, experiment, parent )
 {
-    this->binDir = binDir;
-    this->parent = parent;
-    this->experiment = experiment;
-
-    /*QLineSeries * series = new QLineSeries();
-    for ( int i = 0; i < 100; i++ )
-        series->append(i, i * i);
-    getParentWindow()->setChartSeries(series);*/
+    qDebug() << "SpinEchoThread";
 }
 
-bool ProgrammerThread::isFinished()
-{
-    bool ret;
-    mutex.lock();
-    ret = finished;
-    mutex.unlock();
-    return ret;
-}
-
-void ProgrammerThread::setFinished( bool value )
-{
-    mutex.lock();
-    finished = value;
-    mutex.unlock();
-}
-
-void ProgrammerThread::run()
-{
-    qDebug() << "experiment thread started";
-
-    setFinished(false);
-
-    SpinEcho();
-
-    while ( !isFinished() )
-        QThread::msleep(100);
-
-#ifndef LINUX_BOX
-    if (taskRead != 0)
-    {
-       qDebug() << "stop task read";
-       DAQmxStopTask (taskRead);
-       DAQmxClearTask (taskRead);
-    }
-
-    if (taskTimer != 0)
-    {
-       qDebug() << "stop task timer";
-       DAQmxStopTask (taskTimer);
-       DAQmxClearTask (taskTimer);
-    }
-
-    if (taskRepetitions != 0)
-    {
-       qDebug() << "stop task Repetitions";
-       DAQmxStopTask (taskRepetitions);
-       DAQmxClearTask (taskRepetitions);
-    }
-
-    if (taskRFGate != 0)
-    {
-       qDebug() << "stop task RFGate";
-       DAQmxStopTask (taskRFGate );
-       DAQmxClearTask (taskRFGate );
-    }
-
-    if (taskAcqGate != 0)
-    {
-       qDebug() << "stop task AcqGate";
-       DAQmxStopTask (taskAcqGate );
-       DAQmxClearTask (taskAcqGate );
-    }
-#endif
-
-    //delete dataDC;
-    //delete dataFreq;
-
-    parent->setFinished( true );
-
-    qDebug() << "experiment thread finished";
-}
-
-int32 CVICALLBACK EveryNCallback(TaskHandle taskHandle, int32 everyNsamplesEventType, uInt32 nSamples, void *callbackData)
+int32 CVICALLBACK SpinEchoThreadCallback(TaskHandle taskHandle, int32 everyNsamplesEventType, uInt32 nSamples, void *callbackData)
 {
     int32       read=0;
     float64     * data  = new float64[nSamples];
 
-    ProgrammerThread * thread = (ProgrammerThread*)callbackData;
+    SpinEchoThread * thread = (SpinEchoThread*)callbackData;
 
     qDebug() << "reading " << nSamples << " samples";
 #ifndef LINUX_BOX
@@ -121,16 +43,16 @@ int32 CVICALLBACK EveryNCallback(TaskHandle taskHandle, int32 everyNsamplesEvent
     return 0;
 }
 
-void ProgrammerThread::SpinEcho()
+void SpinEchoThread::startExperiment()
 {
-#ifndef LINUX_BOX
-    double tr = experiment->tR;
-    double tpulse90 = experiment->t90;
-    double tpulse180 = experiment->t180;
-    int nexperiments = experiment->nEchoes;
-    double nsamples1 = experiment->nSamples;
-    double techo = experiment->tEcho;
-    int32 nrepetitions = experiment->nRepetitions;
+    double tr = Settings::getExperimentParameter( experiment, "TR" ).toDouble();
+    double tpulse90 = Settings::getExperimentParameter( experiment, "T90" ).toDouble();
+    double tpulse180 = Settings::getExperimentParameter( experiment, "T180" ).toDouble();
+    int nexperiments = Settings::getExperimentParameter( experiment, "nEchoes" ).toInt();
+    double nsamples1 = Settings::getExperimentParameter( experiment, "nSamples" ).toInt();
+    double techo = Settings::getExperimentParameter( experiment, "TEcho" ).toDouble();
+    int32 nrepetitions = Settings::getExperimentParameter( experiment, "nRepetitions" ).toInt();
+
     //double timer = 50.0e+06;
     double sampleRate1 = 1024;
 
@@ -153,6 +75,7 @@ void ProgrammerThread::SpinEcho()
     qDebug() << "duty90 = " << dutyCycle90;
     qDebug() << "duty180 = " << dutyCycle180;
 
+#ifndef LINUX_BOX
     taskRepetitions = taskRead = taskRFGate = taskTimer = taskAcqGate = 0;
 
    /* qDebug() << "create taskTimer 50 MHz";
@@ -253,7 +176,7 @@ void ProgrammerThread::SpinEcho()
     DAQmxCfgSampClkTiming( taskRead, "", sampleRate1, DAQmx_Val_Rising, DAQmx_Val_FiniteSamps, nsamples1 );
     DAQmxCfgDigEdgeStartTrig( taskRead, "/Dev1/Ctr3InternalOutput", DAQmx_Val_Rising );
     DAQmxSetStartTrigRetriggerable( taskRead, TRUE );
-    DAQmxRegisterEveryNSamplesEvent(taskRead, DAQmx_Val_Acquired_Into_Buffer, nsamples1, 0, EveryNCallback, this );
+    DAQmxRegisterEveryNSamplesEvent(taskRead, DAQmx_Val_Acquired_Into_Buffer, nsamples1, 0, SpinEchoThread, this );
     qDebug() << "start task read";
 
    /* DAQmxStartTask( taskTimer );*/   // el timer no es la mejor forma de sincronizartareas los pulsos son muy estrechos para trigger
@@ -264,7 +187,56 @@ void ProgrammerThread::SpinEcho()
 #endif
 }
 
-MainWindow * ProgrammerThread::getParentWindow()
+void SpinEchoThread::finishExperiment()
 {
-    return parent;
+#ifndef LINUX_BOX
+    if (taskRead != 0)
+    {
+       qDebug() << "stop task read";
+       DAQmxStopTask (taskRead);
+       DAQmxClearTask (taskRead);
+    }
+
+    if (taskTimer != 0)
+    {
+       qDebug() << "stop task timer";
+       DAQmxStopTask (taskTimer);
+       DAQmxClearTask (taskTimer);
+    }
+
+    if (taskRepetitions != 0)
+    {
+       qDebug() << "stop task Repetitions";
+       DAQmxStopTask (taskRepetitions);
+       DAQmxClearTask (taskRepetitions);
+    }
+
+    if (taskRFGate != 0)
+    {
+       qDebug() << "stop task RFGate";
+       DAQmxStopTask (taskRFGate );
+       DAQmxClearTask (taskRFGate );
+    }
+
+    if (taskAcqGate != 0)
+    {
+       qDebug() << "stop task AcqGate";
+       DAQmxStopTask (taskAcqGate );
+       DAQmxClearTask (taskAcqGate );
+    }
+#endif
+}
+
+int SpinEchoThread::getProgressCount()
+{
+    double tr = Settings::getExperimentParameter( experiment, "TR" ).toDouble();
+    int nechoes = Settings::getExperimentParameter( experiment, "nEchoes" ).toInt();
+    int32 nrepetitions = Settings::getExperimentParameter( experiment, "nRepetitions" ).toInt();
+
+    return tr * nrepetitions * (nechoes == 0 ? 1 : nechoes);
+}
+
+int SpinEchoThread::getProgressTimer()
+{
+    return 1000 * Settings::getExperimentParameter( experiment, "TR" ).toDouble();
 }
