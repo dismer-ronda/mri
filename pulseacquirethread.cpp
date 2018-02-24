@@ -52,13 +52,13 @@ void PulseAcquireThread::createExperiment()
     taskRepetitions = new TaskRepetitions( "taskRepetitions", tr, nrepetitions );
     taskRepetitions->createTask();
 
-    taskRFGate = new TaskRFGate( "taskRFGate", t90, 0, techo, 1 );
-    taskRepetitions->createTask();
+    taskRFGate = new TaskRFGate( "taskRFGate", t90, 0, techo, 0 );
+    taskRFGate->createTask();
 
-    taskAcqGate = new TaskAcquisitionGate( "taskAcqGate", t90, techo, 1 );
+    taskAcqGate = new TaskAcquisitionGate( "taskAcqGate", t90, techo, 0 );
     taskAcqGate->createTask();
 
-    taskRead = new TaskRead( "taskRead", 100e+03, nsamples, PulseAcquireThreadCallback );
+    taskRead = new TaskRead( "taskRead", 100e+03, nsamples, PulseAcquireThreadCallback, this );
     taskRead->createTask();
 
 /*    taskRepetitions = taskRead = taskRFGate = taskTimer = taskAcqGate = 0;

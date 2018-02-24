@@ -32,10 +32,10 @@ void TaskAcquisitionGate::createTask()
     double dutycyclecount3 = tacq/techo;
 
 #ifndef LINUX_BOX
-    DAQmxErrChk( DAQmxCreateCOPulseChanFreq( taskId, "Dev1/ctr3", "contador3", DAQmx_Val_Hz, DAQmx_Val_Low, InitialDelaycount3, Freqcount3, dutycyclecount3 ) );
-    DAQmxErrChk( DAQmxCfgImplicitTiming( taskId, DAQmx_Val_FiniteSamps, nReadouts ) );
-    DAQmxErrChk( DAQmxCfgDigEdgeStartTrig( taskId, "/Dev1/Ctr1InternalOutput", DAQmx_Val_Rising ) );
-    DAQmxErrChk( DAQmxSetCOEnableInitialDelayOnRetrigger( taskId, "contador3", TRUE ) );
-    DAQmxErrChk( DAQmxSetStartTrigRetriggerable( taskId, TRUE ) );
+    DAQmxErrChk( "DAQmxCreateCOPulseChanFreq", DAQmxCreateCOPulseChanFreq( taskId, "Dev1/ctr3", "contador3", DAQmx_Val_Hz, DAQmx_Val_Low, InitialDelaycount3, Freqcount3, dutycyclecount3 ) );
+    DAQmxErrChk( "DAQmxCfgImplicitTiming", DAQmxCfgImplicitTiming( taskId, DAQmx_Val_FiniteSamps, nReadouts ) );
+    DAQmxErrChk( "DAQmxCfgDigEdgeStartTrig", DAQmxCfgDigEdgeStartTrig( taskId, "/Dev1/Ctr1InternalOutput", DAQmx_Val_Rising ) );
+    DAQmxErrChk( "DAQmxSetCOEnableInitialDelayOnRetrigger", DAQmxSetCOEnableInitialDelayOnRetrigger( taskId, "contador3", TRUE ) );
+    DAQmxErrChk( "DAQmxSetStartTrigRetriggerable", DAQmxSetStartTrigRetriggerable( taskId, TRUE ) );
 #endif
 }

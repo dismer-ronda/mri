@@ -55,12 +55,12 @@ void SpinEchoThread::createExperiment()
     taskRepetitions->createTask();
 
     taskRFGate = new TaskRFGate( "taskRFGate", t90, t180, techo, nechoes );
-    taskRepetitions->createTask();
+    taskRFGate->createTask();
 
     taskAcqGate = new TaskAcquisitionGate( "taskAcqGate", t90, techo, nechoes );
     taskAcqGate->createTask();
 
-    taskRead = new TaskRead( "taskRead", 100e+03, nsamples, SpinEchoThreadCallback );
+    taskRead = new TaskRead( "taskRead", 100e+03, nsamples, SpinEchoThreadCallback, this );
     taskRead->createTask();
 
 /*    //double timer = 50.0e+06;

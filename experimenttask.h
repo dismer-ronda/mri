@@ -4,7 +4,7 @@
 #include "NIDAQmx.h"
 #include "experimentexception.h"
 
-#define DAQmxErrChk( functionCall ) { int error; if ( DAQmxFailed( error = (functionCall) ) ) throw new ExperimentException( error ); }
+#define DAQmxErrChk( functionName, functionCall ) { int error; if ( DAQmxFailed( error = (functionCall) ) ) { qDebug() << "DAQmxErrChk" << functionName << "errorCode =" << error; throw new ExperimentException( error ); } }
 
 class ExperimentTask
 {

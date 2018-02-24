@@ -6,5 +6,5 @@ ExperimentException::ExperimentException( int code )
 {
     this->code = code;
 
-    qDebug() << "errorCode =" << code;
+    qDebug() << "exception dispatched";
 }

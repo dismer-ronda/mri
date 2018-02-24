@@ -1,6 +1,7 @@
 #ifndef EXPERIMENTEXCEPTION_H
 #define EXPERIMENTEXCEPTION_H
 
+#include <QDebug>
 #include <QException>
 
 class ExperimentException : public QException

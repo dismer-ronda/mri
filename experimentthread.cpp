@@ -37,14 +37,21 @@ void ExperimentThread::run()
 
     createExperiment();
 
-    startExperiment();
+    try
+    {
+        startExperiment();
 
-    while ( !isFinished() )
-        QThread::msleep(100);
-
-    parent->setFinished( true );
+        while ( !isFinished() )
+            QThread::msleep(100);
+    }
+    catch ( ... )
+    {
+        qDebug() << "error executing experiment";
+    }
 
     stopExperiment();
+
+    parent->setFinished( true );
 
     qDebug() << "experiment thread finished";
 }

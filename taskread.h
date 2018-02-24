@@ -9,8 +9,9 @@ public:
     int sampleRate;
     int nsamples;
     DAQmxEveryNSamplesEventCallbackPtr callbackFunction;
+    void * callbackData;
 
-    TaskRead( const QString & name, int sampleRate, int nsamples, DAQmxEveryNSamplesEventCallbackPtr callbackFunction );
+    TaskRead( const QString & name, int sampleRate, int nsamples, DAQmxEveryNSamplesEventCallbackPtr callbackFunction, void * callbackData );
 
     virtual void createTask();
 };
