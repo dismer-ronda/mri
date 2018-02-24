@@ -36,6 +36,6 @@ void TaskAcquisitionGate::createTask()
     DAQmxErrChk( DAQmxCfgImplicitTiming( taskId, DAQmx_Val_FiniteSamps, nReadouts ) );
     DAQmxErrChk( DAQmxCfgDigEdgeStartTrig( taskId, "/Dev1/Ctr1InternalOutput", DAQmx_Val_Rising ) );
     DAQmxErrChk( DAQmxSetCOEnableInitialDelayOnRetrigger( taskId, "contador3", TRUE ) );
-    DAQmxErrChk( DAQmxSetStartTrigRetriggerable( taskAcqGate, TRUE ) );
+    DAQmxErrChk( DAQmxSetStartTrigRetriggerable( taskId, TRUE ) );
 #endif
 }

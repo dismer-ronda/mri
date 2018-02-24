@@ -9,7 +9,7 @@ ExperimentTask::ExperimentTask( const QString & name )
 void ExperimentTask::createTask()
 {
 #ifndef LINUX_BOX
-    DAQmxErrChk( DAQmxCreateTask( name, &taskId ) );
+    DAQmxErrChk( DAQmxCreateTask( name.toStdString().c_str(), &taskId ) );
 #endif
 }
 

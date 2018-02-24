@@ -41,7 +41,7 @@ void TaskRFGate::createTask()
     }
 
 #ifndef LINUX_BOX
-    DAQmxErrChk( DAQmxCreateCOPulseChanFreq( taskId, "Dev1/ctr2", "", DAQmx_Val_Hz,DAQmx_Val_Low, InitialDelaycount2, dataFreq[0], dataDC[0] ) );
+    DAQmxErrChk( DAQmxCreateCOPulseChanFreq( taskId, "Dev1/ctr2", "", DAQmx_Val_Hz,DAQmx_Val_Low, 0, dataFreq[0], dataDC[0] ) );
     DAQmxErrChk( DAQmxCfgImplicitTiming( taskId, DAQmx_Val_FiniteSamps, totalPulses ) );
     DAQmxErrChk( DAQmxCfgDigEdgeStartTrig( taskId, "/Dev1/Ctr1InternalOutput", DAQmx_Val_Rising ) );
     DAQmxErrChk( DAQmxSetStartTrigRetriggerable( taskId, TRUE ) );
