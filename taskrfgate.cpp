@@ -44,6 +44,6 @@ void TaskRFGate::createTask()
     DAQmxErrChk( "DAQmxSetStartTrigRetriggerable", DAQmxSetStartTrigRetriggerable( taskId, TRUE ) );
 
     if ( nechoes > 0 )
-        DAQmxErrChk( "DAQmxWriteCtrFreq", DAQmxWriteCtrFreq( taskId, totalPulses, 1, 10.0, DAQmx_Val_GroupByChannel, dataFreq, dataDC, NULL, NULL ) );
+        DAQmxErrChk( "DAQmxWriteCtrFreq", DAQmxWriteCtrFreq( taskId, totalPulses, 0, 10.0, DAQmx_Val_GroupByChannel, dataFreq, dataDC, NULL, NULL ) );
 #endif
 }

@@ -28,7 +28,6 @@ void ExperimentTask::startTask()
 {
 #ifndef LINUX_BOX
     qDebug() << "starting " + name;
-//    DAQmxErrChk( "DAQmxStartTask", DAQmxStartTask( taskId ) );
-    DAQmxStartTask( taskId );
+    DAQmxErrChk( "DAQmxStartTask", DAQmxStartTask( taskId ) );
 #endif
 }

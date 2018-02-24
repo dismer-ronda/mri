@@ -63,9 +63,10 @@ MainWindow * ExperimentThread::getParentWindow()
 
 void ExperimentThread::startExperiment()
 {
-    taskRead->startTask();
     taskRFGate->startTask();
+    taskRead->startTask();
     taskAcqGate->startTask();
+
     taskRepetitions->startTask();
 }
 
