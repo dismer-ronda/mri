@@ -7,7 +7,11 @@
 #include "utils.h"
 #include "mainwindow.h"
 #include "NIDAQmx.h"
-#include "experiment.h"
+#include "experimenttask.h"
+#include "taskrepetitions.h"
+#include "taskrfgate.h"
+#include "taskacquisitiongate.h"
+#include "taskread.h"
 
 class ExperimentThread : public QThread
 {
@@ -21,6 +25,11 @@ protected:
     QMutex mutex;
     bool finished;
 
+    ExperimentTask * taskRepetitions;
+    ExperimentTask * taskRFGate;
+    ExperimentTask * taskAcqGate;
+    ExperimentTask * taskRead;
+
 public:
 
     ExperimentThread( QString binDir, const QString & experiment, MainWindow * parent );
@@ -28,8 +37,10 @@ public:
     bool isFinished();
     void setFinished( bool value );
 
-    virtual void startExperiment() = 0;
-    virtual void finishExperiment() = 0;
+    virtual void createExperiment() = 0;
+
+    void startExperiment();
+    void stopExperiment();
 
     virtual int getProgressCount() = 0;
     virtual int getProgressTimer() = 0;

@@ -7,28 +7,16 @@
 #include "utils.h"
 #include "mainwindow.h"
 #include "NIDAQmx.h"
-#include "experiment.h"
+#include "experimenttask.h"
 
 class PulseAcquireThread : public ExperimentThread
 {
     Q_OBJECT
 
-private:
-    TaskHandle  taskRepetitions;
-    TaskHandle  taskRead;
-    TaskHandle  taskTimer;
-    TaskHandle  taskRFGate;
-    TaskHandle  taskAcqGate;
-
-    float64 dataFreq[1024];
-    float64 dataDC[1024];
-
 public:
-
     PulseAcquireThread( QString binDir, const QString & experiment, MainWindow * parent );
 
-    virtual void startExperiment();
-    virtual void finishExperiment();
+    virtual void createExperiment();
 
     virtual int getProgressCount();
     virtual int getProgressTimer();

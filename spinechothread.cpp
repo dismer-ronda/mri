@@ -6,8 +6,6 @@
 #include "mainwindow.h"
 #include "settings.h"
 
-int32 CVICALLBACK EveryNCallback(TaskHandle taskHandle, int32 everyNsamplesEventType, uInt32 nSamples, void *callbackData);
-
 SpinEchoThread::SpinEchoThread( QString binDir, const QString & experiment, MainWindow * parent )
     : ExperimentThread( binDir, experiment, parent )
 {
@@ -43,17 +41,29 @@ int32 CVICALLBACK SpinEchoThreadCallback(TaskHandle taskHandle, int32 everyNsamp
     return 0;
 }
 
-void SpinEchoThread::startExperiment()
+void SpinEchoThread::createExperiment()
 {
     double tr = Settings::getExperimentParameter( experiment, "TR" ).toDouble();
-    double tpulse90 = Settings::getExperimentParameter( experiment, "T90" ).toDouble();
-    double tpulse180 = Settings::getExperimentParameter( experiment, "T180" ).toDouble();
-    int nexperiments = Settings::getExperimentParameter( experiment, "nEchoes" ).toInt();
-    double nsamples1 = Settings::getExperimentParameter( experiment, "nSamples" ).toInt();
+    double t90 = Settings::getExperimentParameter( experiment, "T90" ).toDouble();
+    double t180 = Settings::getExperimentParameter( experiment, "T180" ).toDouble();
+    int nechoes = Settings::getExperimentParameter( experiment, "nEchoes" ).toInt();
+    double nsamples = Settings::getExperimentParameter( experiment, "nSamples" ).toInt();
     double techo = Settings::getExperimentParameter( experiment, "TEcho" ).toDouble();
     int32 nrepetitions = Settings::getExperimentParameter( experiment, "nRepetitions" ).toInt();
 
-    //double timer = 50.0e+06;
+    taskRepetitions = new TaskRepetitions( "taskRepetitions", tr, nrepetitions );
+    taskRepetitions->createTask();
+
+    taskRFGate = new TaskRFGate( "taskRFGate", t90, t180, techo, nechoes );
+    taskRepetitions->createTask();
+
+    taskAcqGate = new TaskAcquisitionGate( "taskAcqGate", t90, techo, nechoes );
+    taskAcqGate->createTask();
+
+    taskRead = new TaskRead( "taskRead", 100e+03, nsamples, SpinEchoThreadCallback );
+    taskRead->createTask();
+
+/*    //double timer = 50.0e+06;
     double sampleRate1 = 1024;
 
     double InitialDelaycount1 = 0;
@@ -75,13 +85,12 @@ void SpinEchoThread::startExperiment()
     qDebug() << "duty90 = " << dutyCycle90;
     qDebug() << "duty180 = " << dutyCycle180;
 
-#ifndef LINUX_BOX
     taskRepetitions = taskRead = taskRFGate = taskTimer = taskAcqGate = 0;
 
-   /* qDebug() << "create taskTimer 50 MHz";
-    DAQmxCreateTask( "taskTimer", &taskTimer );
-    DAQmxCreateCOPulseChanFreq( taskTimer,"Dev1/ctr0", "", DAQmx_Val_Hz, DAQmx_Val_Low, 0.0, timer, 0.50 );
-    DAQmxCfgImplicitTiming( taskTimer,DAQmx_Val_ContSamps, 1000 ); */
+    //qDebug() << "create taskTimer 50 MHz";
+    //DAQmxCreateTask( "taskTimer", &taskTimer );
+    //DAQmxCreateCOPulseChanFreq( taskTimer,"Dev1/ctr0", "", DAQmx_Val_Hz, DAQmx_Val_Low, 0.0, timer, 0.50 );
+    //DAQmxCfgImplicitTiming( taskTimer,DAQmx_Val_ContSamps, 1000 );
 
     qDebug() << "create taskCounter repetitions";
 
@@ -90,7 +99,7 @@ void SpinEchoThread::startExperiment()
     DAQmxCreateTask( "taskRepetitions", &taskRepetitions );
     DAQmxCreateCOPulseChanFreq( taskRepetitions, "Dev1/ctr1", "", DAQmx_Val_Hz, DAQmx_Val_Low, InitialDelaycount1, Freqcount1, dutycyclecount1 );
     DAQmxCfgImplicitTiming( taskRepetitions, DAQmx_Val_FiniteSamps, nrepetitions );
-    /* DAQmxCfgDigEdgeStartTrig( taskRepetitions, "/Dev1/Ctr0InternalOutput", DAQmx_Val_Rising ); */
+    //DAQmxCfgDigEdgeStartTrig( taskRepetitions, "/Dev1/Ctr0InternalOutput", DAQmx_Val_Rising );
 
 
 
@@ -179,52 +188,12 @@ void SpinEchoThread::startExperiment()
     DAQmxRegisterEveryNSamplesEvent(taskRead, DAQmx_Val_Acquired_Into_Buffer, nsamples1, 0, SpinEchoThreadCallback, this );
     qDebug() << "start task read";
 
-   /* DAQmxStartTask( taskTimer );*/   // el timer no es la mejor forma de sincronizartareas los pulsos son muy estrechos para trigger
+    // DAQmxStartTask( taskTimer );   // el timer no es la mejor forma de sincronizartareas los pulsos son muy estrechos para trigger
     DAQmxStartTask( taskRead );
     DAQmxStartTask( taskRFGate );
     DAQmxStartTask( taskAcqGate );
     DAQmxStartTask( taskRepetitions );
-#endif
-}
-
-void SpinEchoThread::finishExperiment()
-{
-#ifndef LINUX_BOX
-    if (taskRead != 0)
-    {
-       qDebug() << "stop task read";
-       DAQmxStopTask (taskRead);
-       DAQmxClearTask (taskRead);
-    }
-
-    if (taskTimer != 0)
-    {
-       qDebug() << "stop task timer";
-       DAQmxStopTask (taskTimer);
-       DAQmxClearTask (taskTimer);
-    }
-
-    if (taskRepetitions != 0)
-    {
-       qDebug() << "stop task Repetitions";
-       DAQmxStopTask (taskRepetitions);
-       DAQmxClearTask (taskRepetitions);
-    }
-
-    if (taskRFGate != 0)
-    {
-       qDebug() << "stop task RFGate";
-       DAQmxStopTask (taskRFGate );
-       DAQmxClearTask (taskRFGate );
-    }
-
-    if (taskAcqGate != 0)
-    {
-       qDebug() << "stop task AcqGate";
-       DAQmxStopTask (taskAcqGate );
-       DAQmxClearTask (taskAcqGate );
-    }
-#endif
+*/
 }
 
 int SpinEchoThread::getProgressCount()

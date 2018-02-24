@@ -12,7 +12,7 @@ PulseAcquireThread::PulseAcquireThread( QString binDir, const QString & experime
     qDebug() << "PulseAcquireThread";
 }
 
-int32 CVICALLBACK PulseAcquireThreadCallback(TaskHandle taskHandle, int32 everyNsamplesEventType, uInt32 nSamples, void *callbackData)
+int32 CVICALLBACK PulseAcquireThreadCallback( TaskHandle taskHandle, int32 everyNsamplesEventType, uInt32 nSamples, void *callbackData )
 {
     int32       read=0;
     float64     * data  = new float64[nSamples];
@@ -41,40 +41,32 @@ int32 CVICALLBACK PulseAcquireThreadCallback(TaskHandle taskHandle, int32 everyN
     return 0;
 }
 
-void PulseAcquireThread::startExperiment()
+void PulseAcquireThread::createExperiment()
 {
     double tr = Settings::getExperimentParameter( experiment, "TR" ).toDouble();
-    double tpulse90 = Settings::getExperimentParameter( experiment, "T90" ).toDouble();
-    double nsamples1 = Settings::getExperimentParameter( experiment, "nSamples" ).toInt();
+    double t90 = Settings::getExperimentParameter( experiment, "T90" ).toDouble();
+    double nsamples = Settings::getExperimentParameter( experiment, "nSamples" ).toInt();
     double techo = Settings::getExperimentParameter( experiment, "TEcho" ).toDouble();
     int32 nrepetitions = Settings::getExperimentParameter( experiment, "nRepetitions" ).toInt();
 
-    //double timer = 50.0e+06;
-    double sampleRate1 = 1024;
+    taskRepetitions = new TaskRepetitions( "taskRepetitions", tr, nrepetitions );
+    taskRepetitions->createTask();
 
-    double InitialDelaycount1 = 0;
-    double InitialDelaycount2 = 0;
-    double Freqcount1 = 1/tr;
-    double dutycyclecount1 = 5e-03/tr;
+    taskRFGate = new TaskRFGate( "taskRFGate", t90, 0, techo, 1 );
+    taskRepetitions->createTask();
 
-    double dutyCycle90 = tpulse90/tr;
+    taskAcqGate = new TaskAcquisitionGate( "taskAcqGate", t90, techo, 1 );
+    taskAcqGate->createTask();
 
-    qDebug() << "tr = " << tr;
-    qDebug() << "tpuse90 = " << tpulse90;
-    qDebug() << "techo = " << techo;
-    qDebug() << "nrepetitions = " << nrepetitions;
-    qDebug() << "sampleRate = " << sampleRate1;
-    qDebug() << "nsamples = " << nsamples1;
-    qDebug() << "duty90 = " << dutyCycle90;
+    taskRead = new TaskRead( "taskRead", 100e+03, nsamples, PulseAcquireThreadCallback );
+    taskRead->createTask();
 
-#ifndef LINUX_BOX
+/*    taskRepetitions = taskRead = taskRFGate = taskTimer = taskAcqGate = 0;
 
-    taskRepetitions = taskRead = taskRFGate = taskTimer = taskAcqGate = 0;
-
-   /* qDebug() << "create taskTimer 50 MHz";
-    DAQmxCreateTask( "taskTimer", &taskTimer );
-    DAQmxCreateCOPulseChanFreq( taskTimer,"Dev1/ctr0", "", DAQmx_Val_Hz, DAQmx_Val_Low, 0.0, timer, 0.50 );
-    DAQmxCfgImplicitTiming( taskTimer,DAQmx_Val_ContSamps, 1000 ); */
+    //qDebug() << "create taskTimer 50 MHz";
+    //DAQmxCreateTask( "taskTimer", &taskTimer );
+    //DAQmxCreateCOPulseChanFreq( taskTimer,"Dev1/ctr0", "", DAQmx_Val_Hz, DAQmx_Val_Low, 0.0, timer, 0.50 );
+    //DAQmxCfgImplicitTiming( taskTimer,DAQmx_Val_ContSamps, 1000 );
 
     qDebug() << "create taskCounter repetitions";
 
@@ -83,8 +75,7 @@ void PulseAcquireThread::startExperiment()
     DAQmxCreateTask( "taskRepetitions", &taskRepetitions );
     DAQmxCreateCOPulseChanFreq( taskRepetitions, "Dev1/ctr1", "", DAQmx_Val_Hz, DAQmx_Val_Low, InitialDelaycount1, Freqcount1, dutycyclecount1 );
     DAQmxCfgImplicitTiming( taskRepetitions, DAQmx_Val_FiniteSamps, nrepetitions );
-    /* DAQmxCfgDigEdgeStartTrig( taskRepetitions, "/Dev1/Ctr0InternalOutput", DAQmx_Val_Rising ); */
-
+    // DAQmxCfgDigEdgeStartTrig( taskRepetitions, "/Dev1/Ctr0InternalOutput", DAQmx_Val_Rising );
 
 
     qDebug() << "create taskRFGate";
@@ -99,7 +90,7 @@ void PulseAcquireThread::startExperiment()
     DAQmxCfgDigEdgeStartTrig( taskRFGate,"/Dev1/Ctr1InternalOutput", DAQmx_Val_Rising );
     DAQmxSetStartTrigRetriggerable( taskRFGate, TRUE );
 
-    qDebug() << "create task Acquisition Gate";  //******** Importante: Enforce tacq < spacing betwen RF pulses to protect receiver
+    qDebug() << "create task Acquisition Gate";  // ******** Importante: Enforce tacq < spacing betwen RF pulses to protect receiver
 
     double tacq = 1e-03;
     double InitialDelaycount3 = 0;
@@ -132,61 +123,20 @@ void PulseAcquireThread::startExperiment()
     DAQmxRegisterEveryNSamplesEvent(taskRead, DAQmx_Val_Acquired_Into_Buffer, nsamples1, 0, PulseAcquireThreadCallback, this );
     qDebug() << "start task read";
 
-   /* DAQmxStartTask( taskTimer );*/   // el timer no es la mejor forma de sincronizartareas los pulsos son muy estrechos para trigger
+   // DAQmxStartTask( taskTimer );   // el timer no es la mejor forma de sincronizartareas los pulsos son muy estrechos para trigger
     DAQmxStartTask( taskRead );
     DAQmxStartTask( taskRFGate );
     DAQmxStartTask( taskAcqGate );
     DAQmxStartTask( taskRepetitions );
-#endif
-}
-
-void PulseAcquireThread::finishExperiment()
-{
-#ifndef LINUX_BOX
-    if (taskRead != 0)
-    {
-       qDebug() << "stop task read";
-       DAQmxStopTask (taskRead);
-       DAQmxClearTask (taskRead);
-    }
-
-    if (taskTimer != 0)
-    {
-       qDebug() << "stop task timer";
-       DAQmxStopTask (taskTimer);
-       DAQmxClearTask (taskTimer);
-    }
-
-    if (taskRepetitions != 0)
-    {
-       qDebug() << "stop task Repetitions";
-       DAQmxStopTask (taskRepetitions);
-       DAQmxClearTask (taskRepetitions);
-    }
-
-    if (taskRFGate != 0)
-    {
-       qDebug() << "stop task RFGate";
-       DAQmxStopTask (taskRFGate );
-       DAQmxClearTask (taskRFGate );
-    }
-
-    if (taskAcqGate != 0)
-    {
-       qDebug() << "stop task AcqGate";
-       DAQmxStopTask (taskAcqGate );
-       DAQmxClearTask (taskAcqGate );
-    }
-#endif
+*/
 }
 
 int PulseAcquireThread::getProgressCount()
 {
     double tr = Settings::getExperimentParameter( experiment, "TR" ).toDouble();
-    int nechoes = Settings::getExperimentParameter( experiment, "nEchoes" ).toInt();
     int32 nrepetitions = Settings::getExperimentParameter( experiment, "nRepetitions" ).toInt();
 
-    return tr * nrepetitions * (nechoes == 0 ? 1 : nechoes);
+    return tr * nrepetitions;
 }
 
 int PulseAcquireThread::getProgressTimer()

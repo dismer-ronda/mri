@@ -34,7 +34,13 @@ SOURCES += main.cpp\
     utils.cpp \
     experimentthread.cpp \
     pulseacquirethread.cpp \
-    spinechothread.cpp
+    spinechothread.cpp \
+    taskrepetitions.cpp \
+    experimenttask.cpp \
+    experimentexception.cpp \
+    taskrfgate.cpp \
+    taskacquisitiongate.cpp \
+    taskread.cpp
 
 HEADERS  += mainwindow.h \
     NIDAQmx.h \
@@ -44,6 +50,12 @@ HEADERS  += mainwindow.h \
     experiment.h \
     pulseacquirethread.h \
     experimentthread.h \
-    spinechothread.h
+    spinechothread.h \
+    taskrepetitions.h \
+    experimenttask.h \
+    experimentexception.h \
+    taskrfgate.h \
+    taskacquisitiongate.h \
+    taskread.h
 
 FORMS    +=

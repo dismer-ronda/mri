@@ -35,6 +35,8 @@ void ExperimentThread::run()
 
     setFinished(false);
 
+    createExperiment();
+
     startExperiment();
 
     while ( !isFinished() )
@@ -42,7 +44,7 @@ void ExperimentThread::run()
 
     parent->setFinished( true );
 
-    finishExperiment();
+    stopExperiment();
 
     qDebug() << "experiment thread finished";
 }
@@ -50,4 +52,20 @@ void ExperimentThread::run()
 MainWindow * ExperimentThread::getParentWindow()
 {
     return parent;
+}
+
+void ExperimentThread::startExperiment()
+{
+    taskRead->startTask();
+    taskRFGate->startTask();
+    taskAcqGate->startTask();
+    taskRepetitions->startTask();
+}
+
+void ExperimentThread::stopExperiment()
+{
+    taskRead->destroyTask();
+    taskRFGate->destroyTask();
+    taskAcqGate->destroyTask();
+    taskRepetitions->destroyTask();
 }
