@@ -31,6 +31,7 @@ protected:
     ExperimentTask * taskRead;
 
 public:
+    int errorCode;
 
     ExperimentThread( QString binDir, const QString & experiment, MainWindow * parent );
 
@@ -39,9 +40,9 @@ public:
 
     virtual void createExperiment() = 0;
 
-    void startExperiment();
     void stopExperiment();
 
+    virtual void startExperiment();
     virtual int getProgressCount() = 0;
     virtual int getProgressTimer() = 0;
 

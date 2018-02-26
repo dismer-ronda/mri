@@ -35,8 +35,9 @@ class MainWindow : public QMainWindow
     QStringList experiments;
     QStringListModel * model;
 
-    QLineSeries * series1;
-    QLineSeries * series2;
+    QLineSeries * seriesReal;
+    QLineSeries * seriesImag;
+    QLineSeries * seriesMod;
 
     QChart *chartReal;
     QChartView *chartViewReal;
@@ -80,8 +81,13 @@ public:
     void setFinished( bool value );
     bool isFinished();
 
-    void setChartSeries( QLineSeries * series );
-    QLineSeries * getChartSeries();
+    void setChartSeriesReal( QLineSeries * series );
+    void setChartSeriesImag( QLineSeries * series );
+    void setChartSeriesMod( QLineSeries * series );
+
+    QLineSeries * getChartSeriesReal();
+    QLineSeries * getChartSeriesImag();
+    QLineSeries * getChartSeriesMod();
 
     void startExperiment( const QString & name );
     void updateExperimentsButtons();

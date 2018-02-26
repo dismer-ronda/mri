@@ -6,12 +6,12 @@
 class TaskRead : public ExperimentTask
 {
 public:
-    int sampleRate;
+    int samplingRate;
     int nsamples;
     DAQmxEveryNSamplesEventCallbackPtr callbackFunction;
     void * callbackData;
 
-    TaskRead( const QString & name, int sampleRate, int nsamples, DAQmxEveryNSamplesEventCallbackPtr callbackFunction, void * callbackData );
+    TaskRead( const QString & name, int samplingRate, int nsamples, DAQmxEveryNSamplesEventCallbackPtr callbackFunction, void * callbackData );
 
     virtual void createTask();
 };

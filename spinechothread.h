@@ -13,9 +13,19 @@ class SpinEchoThread : public ExperimentThread
     Q_OBJECT
 
 public:
+    float64 * data;
+
+    QLineSeries * seriesReal;
+    QLineSeries * seriesImag;
+
+    int echo;
+    int nechoes;
+
     SpinEchoThread( QString binDir, const QString & experiment, MainWindow * parent );
+    virtual ~SpinEchoThread();
 
     virtual void createExperiment();
+    virtual void startExperiment();
 
     virtual int getProgressCount();
     virtual int getProgressTimer();

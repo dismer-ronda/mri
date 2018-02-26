@@ -33,20 +33,29 @@ void ExperimentThread::run()
 {
     qDebug() << "experiment thread started";
 
-    setFinished(false);
+    errorCode = 0;
 
-    createExperiment();
+    taskAcqGate = taskRepetitions = taskRFGate = taskRead = NULL;
+
+    setFinished(false);
 
     try
     {
+        createExperiment();
+
         startExperiment();
 
         while ( !isFinished() )
             QThread::msleep(100);
     }
-    catch ( ... )
+    catch ( ExperimentException e )
     {
         qDebug() << "error executing experiment";
+        errorCode = e.code;
+    }
+    catch ( ...  )
+    {
+        errorCode = ExperimentException::ERROR_UNKNOWN;
     }
 
     stopExperiment();
@@ -72,8 +81,15 @@ void ExperimentThread::startExperiment()
 
 void ExperimentThread::stopExperiment()
 {
-    taskRead->destroyTask();
-    taskRFGate->destroyTask();
-    taskAcqGate->destroyTask();
-    taskRepetitions->destroyTask();
+    if ( taskRead != NULL )
+        taskRead->destroyTask();
+
+    if ( taskRFGate != NULL )
+        taskRFGate->destroyTask();
+
+    if ( taskAcqGate != NULL )
+        taskAcqGate->destroyTask();
+
+    if ( taskRepetitions != NULL)
+        taskRepetitions->destroyTask();
 }

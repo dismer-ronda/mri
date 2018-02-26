@@ -169,8 +169,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     programmer1 = NULL;
 
-    series1 = NULL;
-    series2 = NULL;
+    seriesReal = NULL;
+    seriesImag = NULL;
+    seriesMod = NULL;
 
     experimentsChanged = false;
 }
@@ -195,22 +196,74 @@ bool MainWindow::isFinished()
     return ret;
 }
 
-void MainWindow::setChartSeries( QLineSeries * series )
+void MainWindow::setChartSeriesReal( QLineSeries * series )
 {
     mutex.lock();
-    series1 = series;
+    if ( seriesReal != NULL )
+        delete seriesReal;
+    seriesReal = series;
+    mutex.unlock();
+}
+void MainWindow::setChartSeriesImag( QLineSeries * series )
+{
+    mutex.lock();
+    if ( seriesImag != NULL )
+        delete seriesImag;
+    seriesImag = series;
     mutex.unlock();
 }
 
-QLineSeries * MainWindow::getChartSeries()
+void MainWindow::setChartSeriesMod( QLineSeries * series )
+{
+    mutex.lock();
+    if ( seriesMod != NULL )
+        delete seriesMod;
+    seriesMod = series;
+    mutex.unlock();
+}
+
+QLineSeries * MainWindow::getChartSeriesReal()
 {
     QLineSeries * ret = new QLineSeries();
 
     mutex.lock();
-    if ( series1 != NULL )
+    if ( seriesReal != NULL )
     {
-        ret->append( series1->points() );
-        series1 = NULL;
+        ret->append( seriesReal->points() );
+        delete seriesReal;
+        seriesReal = NULL;
+    }
+    mutex.unlock();
+
+    return ret;
+}
+
+QLineSeries * MainWindow::getChartSeriesImag()
+{
+    QLineSeries * ret = new QLineSeries();
+
+    mutex.lock();
+    if ( seriesImag != NULL )
+    {
+        ret->append( seriesImag->points() );
+        delete seriesImag;
+        seriesImag = NULL;
+    }
+    mutex.unlock();
+
+    return ret;
+}
+
+QLineSeries * MainWindow::getChartSeriesMod()
+{
+    QLineSeries * ret = new QLineSeries();
+
+    mutex.lock();
+    if ( seriesMod != NULL )
+    {
+        ret->append( seriesMod->points() );
+        delete seriesMod;
+        seriesMod = NULL;
     }
     mutex.unlock();
 
@@ -231,7 +284,12 @@ void MainWindow::startExperiment( const QString & name )
         programmer1 = new SpinEchoThread( MainWindow::binDir, name, this );
 
     chartReal->removeAllSeries();
+    chartImag->removeAllSeries();
+    chartMod->removeAllSeries();
+
     chartViewReal->update();
+    chartViewImag->update();
+    chartViewMod->update();
 
     programmer1->start();
 
@@ -265,7 +323,7 @@ void MainWindow::timerEvent(QTimerEvent *event)
         
         progressBar->setValue( value );
 
-        QLineSeries * series = getChartSeries();
+        QLineSeries * series = getChartSeriesReal();
 
         if ( series->count() > 0 )
         {
@@ -275,11 +333,42 @@ void MainWindow::timerEvent(QTimerEvent *event)
             chartViewReal->update();
         }
 
+        series = getChartSeriesImag();
+
+        if ( series->count() > 0 )
+        {
+            chartImag->removeAllSeries();
+            chartImag->addSeries(series);
+
+            chartViewImag->update();
+        }
+
+        series = getChartSeriesMod();
+
+        if ( series->count() > 0 )
+        {
+            chartMod->removeAllSeries();
+            chartMod->addSeries(series);
+
+            chartViewMod->update();
+        }
+
         if ( value == size )
         {
             if ( programmer1 != NULL )
                 programmer1->setFinished(true);
         }
+
+        /*MEMORYSTATUSEX memory_status;
+        ZeroMemory(&memory_status, sizeof(MEMORYSTATUSEX));
+        memory_status.dwLength = sizeof(MEMORYSTATUSEX);
+        if (GlobalMemoryStatusEx(&memory_status)) {
+          system_info.append(
+                QString("RAM: %1 MB")
+                .arg(memory_status.ullTotalPhys / (1024 * 1024)));
+        } else {
+          system_info.append("Unknown RAM");
+        }*/
     }
     else
     {
@@ -298,6 +387,9 @@ void MainWindow::timerEvent(QTimerEvent *event)
         buttonTab2->show();
 
         labelHeader->setText("Prepare la muestra y presione el botón correspondiente al experimento" );
+
+        if ( programmer1->errorCode != 0 )
+            QMessageBox::question(this, "Error", "Error", QMessageBox::Ok);
     }
 }
 
