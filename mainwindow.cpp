@@ -41,10 +41,14 @@ MainWindow::MainWindow(QWidget *parent) :
 
     setWindowFlags(Qt::FramelessWindowHint);
     setGeometry( 0, 0, maxWidth, maxHeight );
-    //setStyleSheet( "border: 2px solid black" );
+
+    setStyleSheet( QString( "border: %1px solid #%2; background-color: #%3" )
+                   .arg( Settings::getCustom( "window.borderThickness", "1" ) )
+                   .arg( Settings::getCustom( "window.borderColor", "0000FF" ) )
+                   .arg( Settings::getCustom( "window.background", "FFFFFF" ) ) );
 
     QWidget * mainWidget = new QWidget( this );
-    //mainWidget->setStyleSheet( "border: none" );
+    mainWidget->setStyleSheet( "border: none" );
     mainWidget->setGeometry( (maxWidth - width)/2, (maxHeight - height)/2, width, height );
     mainWidget->show();
     QRect crMain = mainWidget->geometry();
@@ -54,6 +58,7 @@ MainWindow::MainWindow(QWidget *parent) :
     rowButtons->show();
 
     buttonTab1 = createButton( rowButtons, "Ejecución" );
+    buttonTab1->setStyleSheet( modifyStyleSheet( buttonTab1->styleSheet(), "background-color", QString( "#%1" ).arg( Settings::getCustom( "tab.selected", "FFFFFF" ) ) ) );
     buttonTab1->setGeometry( 0, 0, widthButtons, heightButtons );
     buttonTab1->show();
     connect(buttonTab1, SIGNAL(clicked()), this, SLOT(on_buttonTab1_clicked()));
@@ -403,6 +408,9 @@ void MainWindow::on_buttonTab1_clicked()
     tab2->hide();
     tab1->show();
 
+    buttonTab1->setStyleSheet( modifyStyleSheet( buttonTab1->styleSheet(), "background-color", QString( "#%1" ).arg( Settings::getCustom( "tab.selected", "FFFFFF" ) ) ) );
+    buttonTab2->setStyleSheet( modifyStyleSheet( buttonTab2->styleSheet(), "background-color", QString( "#%1" ).arg( Settings::getCustom( "button.background", "FFFFFF" ) ) ) );
+
     disconnect(editExperiments, SIGNAL(textChanged()));
 
     if ( experimentsChanged )
@@ -418,6 +426,9 @@ void MainWindow::on_buttonTab1_clicked()
 void MainWindow::on_buttonTab2_clicked()
 {
     editExperiments->setText( readTextFile( binDir + "/setup.ini" ) );
+
+    buttonTab2->setStyleSheet( modifyStyleSheet( buttonTab2->styleSheet(), "background-color", QString( "#%1" ).arg( Settings::getCustom( "tab.selected", "FFFFFF" ) ) ) );
+    buttonTab1->setStyleSheet( modifyStyleSheet( buttonTab1->styleSheet(), "background-color", QString( "#%1" ).arg( Settings::getCustom( "button.background", "FFFFFF" ) ) ) );
 
     connect(editExperiments, SIGNAL(textChanged()), this, SLOT(on_experimentsChanged()));
 

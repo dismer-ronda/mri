@@ -40,7 +40,8 @@ SOURCES += main.cpp\
     experimentexception.cpp \
     taskrfgate.cpp \
     taskacquisitiongate.cpp \
-    taskread.cpp
+    taskread.cpp \
+    custombutton.cpp
 
 HEADERS  += mainwindow.h \
     NIDAQmx.h \
@@ -56,6 +57,7 @@ HEADERS  += mainwindow.h \
     experimentexception.h \
     taskrfgate.h \
     taskacquisitiongate.h \
-    taskread.h
+    taskread.h \
+    custombutton.h
 
 FORMS    +=

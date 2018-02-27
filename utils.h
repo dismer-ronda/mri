@@ -58,4 +58,9 @@ QPushButton * createButton( QWidget * parent, const QString & text );
 QString readTextFile( const QString & fileName );
 void writeTextFile( const QString & fileName, const QString & text );
 
+bool presentField( QString source, QString field );
+QString scanField( QString source, int &start, QString field );
+
+QString modifyStyleSheet( QString styleSheet, QString property, QString value );
+
 #endif // UTILS_H

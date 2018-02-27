@@ -62,7 +62,7 @@ void Settings::setSelectedExperiment( const QString &experiment )
 
 QString Settings::getCustom( QString setup, QString def )
 {
-    return instance->settings->value( QString( "customization/%1" ).arg( setup ), QVariant( def ) ).toString();
+    return instance->settings->value( QString( "Customization/%1" ).arg( setup ), QVariant( def ) ).toString();
 }
 
 QVariant Settings::getSetting( QString setting, QVariant def )

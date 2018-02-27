@@ -11,6 +11,7 @@
 
 #include "utils.h"
 #include "settings.h"
+#include "custombutton.h"
 
 void WriteShort( BYTE * buffer, int offset, int value )
 {
@@ -388,9 +389,11 @@ int getBorderThickness()
 
 QPushButton * createButton( QWidget * parent, const QString & text )
 {
-    QPushButton * button = new QPushButton( parent );
-    button->setStyleSheet( QString( "font-size: %1px; font-weight: bold; background-color: #%2; color: #%3" )
-                         .arg( Settings::getCustom( "button.fontSize", "24" ) )
+    CustomButton * button = new CustomButton( parent );
+    button->setStyleSheet( QString( "font-size: %1px; font-style: %2; font-weight: %3; background-color: #%4; color: #%5" )
+                           .arg( Settings::getCustom( "button.fontSize", "24" ) )
+                           .arg( Settings::getCustom( "button.fontStyle", "normal" ) )
+                           .arg( Settings::getCustom( "button.fontWeight", "normal" ) )
                          .arg( Settings::getCustom( "button.background", "075B91" ) )
                          .arg( Settings::getCustom( "button.color", "FFFFFF" ) ) );
     button->setText( text );
@@ -424,4 +427,63 @@ void writeTextFile( const QString & fileName, const QString & text )
     out << text;
     file.flush();
     file.close();
+}
+
+QString scanStyleSheetField( QString source, int &start, QString & field )
+{
+    while ( start < source.length() && source.at(start) != ':' )
+        field += source.at(start++);
+    field = field.trimmed();
+    start++;
+
+    QString value="";
+    while ( start < source.length() && source.at(start) != ';' )
+        value += source.at(start++);
+    value = value.trimmed();
+    start++;
+
+    return value;
+}
+
+QMap<QString, QString> * parseStyleSheet( QString styleSheet )
+{
+    QMap<QString, QString> * map = new QMap<QString, QString>();
+
+    int start = 0;
+
+    qDebug() << "styleSheet" << styleSheet;
+
+    while ( start < styleSheet.length() )
+    {
+        QString field = "";
+        QString value = scanStyleSheetField( styleSheet, start, field );
+
+        if ( !value.isEmpty() )
+            (*map)[field] = value;
+    }
+
+    return map;
+}
+
+QString generateStyleSheet( QMap<QString, QString> * map )
+{
+    QMap<QString, QString>::const_iterator i = map->constBegin();
+
+    QString ret = "";
+
+    while (i != map->constEnd()) {
+        ret += i.key() + ": " + i.value() + ";";
+        ++i;
+    }
+
+    return ret;
+}
+
+QString modifyStyleSheet( QString styleSheet, QString property, QString value )
+{
+    QMap<QString, QString> * map = parseStyleSheet(styleSheet);
+
+    (*map)[property] = value;
+
+    return generateStyleSheet( map );
 }
