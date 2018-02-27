@@ -22,6 +22,7 @@ PulseAcquireThread::~PulseAcquireThread()
         delete data;
 }
 
+#ifndef LINUX_BOX
 void fftw( float64 * data, int nsamples )
 {
     fftw_complex *in, *out;
@@ -49,6 +50,7 @@ void fftw( float64 * data, int nsamples )
     fftw_free(in);
     fftw_free(out);
 }
+#endif
 
 int32 CVICALLBACK PulseAcquireThreadCallback( TaskHandle taskHandle, int32 everyNsamplesEventType, uInt32 nSamples, void *callbackData )
 {
@@ -83,6 +85,7 @@ int32 CVICALLBACK PulseAcquireThreadCallback( TaskHandle taskHandle, int32 every
             seriesImag->append(i, thread->data[2 * i+1] );
         }
 
+#ifndef LINUX_BOX
         if ( thread->module.compare("fft" ) == 0 )
         {
             fftw( newdata, nSamples );
@@ -103,6 +106,7 @@ int32 CVICALLBACK PulseAcquireThreadCallback( TaskHandle taskHandle, int32 every
                 seriesMod->append(i, sqrt( pow(newdata[2 * i],2) + pow(newdata[2 * i+1],2) ) );
         }
         else
+#endif
         {
             for ( int i = 0; i < nSamples; i++ )
                 seriesMod->append(i, sqrt( pow(thread->data[2 * i],2) + pow(thread->data[2 * i+1],2) ) );
@@ -144,6 +148,7 @@ void PulseAcquireThread::createExperiment()
     taskRead = new TaskRead( "taskRead", samplingrate, nsamples, PulseAcquireThreadCallback, this );
     taskRead->createTask();
 
+#ifndef LINUX_BOX
     if ( module.compare("fft" ) == 0 )
     {
         QValueAxis * axis = new QValueAxis();
@@ -152,6 +157,7 @@ void PulseAcquireThread::createExperiment()
 
         parent->setModChartAxis( axis );
     }
+#endif
 }
 
 int PulseAcquireThread::getProgressCount()
