@@ -109,6 +109,8 @@ void SpinEchoThread::createExperiment()
 
     taskRead = new TaskRead( "taskRead", samplingrate, nsamples, SpinEchoThreadCallback, this );
     taskRead->createTask();
+
+    parent->setModChartAxisDefault();
 }
 
 int SpinEchoThread::getProgressCount()
