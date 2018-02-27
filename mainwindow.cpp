@@ -5,6 +5,7 @@
 #include <QScreen>
 #include <QPushButton>
 #include <QTextEdit>
+#include <QValueAxis>
 
 #include "settings.h"
 #include "mainwindow.h"
@@ -150,7 +151,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     chartMod = new QChart();
     chartMod->legend()->hide();
-    chartMod->createDefaultAxes();
     chartViewMod = new QChartView(chartMod, rowBottom);
     chartViewMod->setRenderHint(QPainter::Antialiasing);
     chartViewMod->setGeometry(2 * widthSignal, 0, widthSignal, cr5.height() );
@@ -482,4 +482,11 @@ void MainWindow::updateExperimentsButtons()
 
         expButtons.append(button);
     }
+}
+
+void MainWindow::setModChartAxis( QValueAxis * axis )
+{
+    chartMod->removeAxis( chartMod->axisX() );
+    chartMod->addAxis( axis, Qt::AlignBottom );
+
 }

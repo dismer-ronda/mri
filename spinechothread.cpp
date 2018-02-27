@@ -11,7 +11,7 @@ SpinEchoThread::SpinEchoThread( QString binDir, const QString & experiment, Main
 {
     qDebug() << "SpinEchoThread";
 
-    seriesReal = seriesImag = NULL;
+    seriesReal = seriesImag = seriesMod = NULL;
     data = NULL;
 }
 
@@ -22,6 +22,9 @@ SpinEchoThread::~SpinEchoThread()
 
     if ( seriesImag != NULL )
         delete seriesImag;
+
+    if ( seriesMod != NULL )
+        delete seriesMod;
 
     if ( data != NULL )
         delete data;
@@ -47,14 +50,16 @@ int32 CVICALLBACK SpinEchoThreadCallback(TaskHandle taskHandle, int32 everyNsamp
     {
         for ( int i = 0; i < nSamples; i++ )
         {
-            thread->data[thread->echo * 2 * nSamples + 2 * i] += newdata[2*i];
-            thread->seriesReal->append(thread->echo * nSamples + i, thread->data[thread->echo * 2 * nSamples + 2 * i] );
+            thread->data[thread->echo * 3 * nSamples + 3 * i] += newdata[2*i];
+            thread->data[thread->echo * 3 * nSamples + 3 * i+1] += newdata[2*i+1];
+            thread->data[thread->echo * 3 * nSamples + 3 * i+2] = sqrt( pow( thread->data[thread->echo * 3 * nSamples + 3 * i], 2 ) + pow( thread->data[thread->echo * 3 * nSamples + 3 * i+1], 2 ));
         }
 
         for ( int i = 0; i < nSamples; i++ )
         {
-            thread->data[thread->echo * 2 * nSamples + 2 * i+1] += newdata[2*i+1];
-            thread->seriesImag->append(thread->echo * nSamples + i, thread->data[thread->echo * 2 * nSamples + 2 * i+1] );
+            thread->seriesReal->append(thread->echo * nSamples + i, thread->data[thread->echo * 3 * nSamples + 3 * i] );
+            thread->seriesImag->append(thread->echo * nSamples + i, thread->data[thread->echo * 3 * nSamples + 3 * i+1] );
+            thread->seriesMod->append(thread->echo * nSamples + i, thread->data[thread->echo * 3 * nSamples + 3 * i+2] );
         }
     }
 
@@ -68,11 +73,13 @@ int32 CVICALLBACK SpinEchoThreadCallback(TaskHandle taskHandle, int32 everyNsamp
 
         thread->getParentWindow()->setChartSeriesReal(thread->seriesReal);
         thread->getParentWindow()->setChartSeriesImag(thread->seriesImag);
+        thread->getParentWindow()->setChartSeriesMod(thread->seriesMod);
 
         thread->echo = 0;
 
         thread->seriesReal = new QLineSeries();
         thread->seriesImag = new QLineSeries();
+        thread->seriesMod = new QLineSeries();
     }
 
     return 0;
@@ -122,10 +129,11 @@ void SpinEchoThread::startExperiment()
 
     seriesReal = new QLineSeries();
     seriesImag = new QLineSeries();
+    seriesMod = new QLineSeries();
 
     int nsamples = Settings::getExperimentParameter( experiment, "nSamples" ).toInt();
-    data = new float64[nechoes * 2 * nsamples];
-    for ( int i = 0; i < nechoes * 2 * nsamples; i++)
+    data = new float64[nechoes * 3 * nsamples];
+    for ( int i = 0; i < nechoes * 3 * nsamples; i++)
         data[i] = 0;
 }
 

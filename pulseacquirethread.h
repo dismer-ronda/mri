@@ -15,6 +15,7 @@ class PulseAcquireThread : public ExperimentThread
 
 public:
     float64 * data;
+    QString module;
 
     PulseAcquireThread( QString binDir, const QString & experiment, MainWindow * parent );
     virtual ~PulseAcquireThread();

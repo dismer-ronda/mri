@@ -15,6 +15,7 @@ class CheckThread;
 #include <QListView>
 #include <QTextEdit>
 #include <QLabel>
+#include <QValueAxis>
 
 #include "experimentthread.h"
 
@@ -91,6 +92,8 @@ public:
 
     void startExperiment( const QString & name );
     void updateExperimentsButtons();
+
+    void setModChartAxis( QValueAxis * axis );
 
 private slots:
     void on_buttonTerminate_clicked();

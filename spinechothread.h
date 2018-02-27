@@ -17,6 +17,7 @@ public:
 
     QLineSeries * seriesReal;
     QLineSeries * seriesImag;
+    QLineSeries * seriesMod;
 
     int echo;
     int nechoes;
