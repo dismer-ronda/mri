@@ -12,6 +12,7 @@
 #include "utils.h"
 #include "settings.h"
 #include "custombutton.h"
+#include "fftw3.h"
 
 void WriteShort( BYTE * buffer, int offset, int value )
 {

@@ -1,7 +1,7 @@
 #include "taskread.h"
 #include "experimentthread.h"
 
-int32 CVICALLBACK TaskReadCallback( TaskHandle, int32, uInt32 nSamples, void *callbackData )
+int32 CVICALLBACK TaskReadCallback( TaskHandle taskHandle, int32, uInt32 nSamples, void *callbackData )
 {
     int32 read = 0;
     float64 * samples = new float64[2 * nSamples];

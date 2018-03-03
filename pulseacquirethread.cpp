@@ -44,7 +44,7 @@ void PulseAcquireThread::registerSamples( float64 * samples )
 #ifndef LINUX_BOX
     if ( module.compare("fft" ) == 0 )
     {
-        fftw( samples, nSamples );
+        fftw( samples, nsamples );
 
         for ( int i = 0; i < nsamples; i++ )
             seriesMod->append(i, sqrt( pow(samples[2 * i], 2) + pow(samples[2 * i+1], 2) ) );
