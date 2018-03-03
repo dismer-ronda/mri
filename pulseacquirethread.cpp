@@ -8,8 +8,6 @@
 #include "mainwindow.h"
 #include "settings.h"
 
-#include "fftw3.h"
-
 PulseAcquireThread::PulseAcquireThread( QString binDir, const QString & experiment, MainWindow * parent )
     : ExperimentThread( binDir, experiment, parent )
 {
