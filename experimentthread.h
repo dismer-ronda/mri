@@ -46,6 +46,8 @@ public:
     virtual int getProgressCount() = 0;
     virtual int getProgressTimer() = 0;
 
+    virtual void registerSamples( float64 * samples ) = 0;
+
     MainWindow * getParentWindow();
 
 protected:

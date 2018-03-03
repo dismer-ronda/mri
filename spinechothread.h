@@ -21,6 +21,7 @@ public:
 
     int echo;
     int nechoes;
+    int nsamples;
 
     SpinEchoThread( QString binDir, const QString & experiment, MainWindow * parent );
     virtual ~SpinEchoThread();
@@ -30,6 +31,8 @@ public:
 
     virtual int getProgressCount();
     virtual int getProgressTimer();
+
+    virtual void registerSamples( float64 * samples );
 };
 
 #endif // SpinEchoThread_H

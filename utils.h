@@ -7,6 +7,7 @@
 #include <QPushButton>
 
 #include "types.h"
+#include "NIDAQmx.h"
 
 void WriteShort( BYTE * buffer, int offset, int value );
 void WriteWord( BYTE * buffer, int offset, WORD value );
@@ -62,5 +63,10 @@ bool presentField( QString source, QString field );
 QString scanField( QString source, int &start, QString field );
 
 QString modifyStyleSheet( QString styleSheet, QString property, QString value );
+
+void findMaxPos( double * values, int size, double & max, int & pos );
+double getAreaUnderMax( double * values, int size, double max, int pos );
+
+void fftw( float64 * data, int nsamples );
 
 #endif // UTILS_H

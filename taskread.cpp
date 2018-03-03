@@ -1,11 +1,34 @@
 #include "taskread.h"
+#include "experimentthread.h"
 
-TaskRead::TaskRead(const QString & name, int samplingRate, int nsamples, DAQmxEveryNSamplesEventCallbackPtr callbackFunction, void * callbackData )
+int32 CVICALLBACK TaskReadCallback( TaskHandle, int32, uInt32 nSamples, void *callbackData )
+{
+    int32 read = 0;
+    float64 * samples = new float64[2 * nSamples];
+
+    ExperimentThread * thread = (ExperimentThread*)callbackData;
+
+#ifndef LINUX_BOX
+    DAQmxReadAnalogF64( taskHandle, nSamples, 0.1, DAQmx_Val_GroupByScanNumber, samples, 2 * nSamples, &read, NULL );
+#endif
+
+    bool ok = read == nSamples;
+
+    qDebug() << "read samples " << (ok ? "ok" : "failed");
+
+    if ( ok )
+        thread->registerSamples( samples );
+
+    delete samples;
+
+    return 0;
+}
+
+TaskRead::TaskRead(const QString & name, int samplingRate, int nsamples, void * callbackData )
     : ExperimentTask( name )
 {
     this->samplingRate = samplingRate;
     this->nsamples = nsamples;
-    this->callbackFunction = callbackFunction;
     this->callbackData = callbackData;
 }
 
@@ -18,6 +41,6 @@ void TaskRead::createTask()
     DAQmxErrChk( "DAQmxCfgSampClkTiming", DAQmxCfgSampClkTiming( taskId, "", samplingRate, DAQmx_Val_Rising, DAQmx_Val_FiniteSamps, nsamples ) );
     DAQmxErrChk( "DAQmxCfgDigEdgeStartTrig", DAQmxCfgDigEdgeStartTrig( taskId, "/Dev1/Ctr3InternalOutput", DAQmx_Val_Rising ) );
     DAQmxErrChk( "DAQmxSetStartTrigRetriggerable", DAQmxSetStartTrigRetriggerable( taskId, TRUE ) );
-    DAQmxErrChk( "DAQmxRegisterEveryNSamplesEvent", DAQmxRegisterEveryNSamplesEvent( taskId, DAQmx_Val_Acquired_Into_Buffer, nsamples, 0, callbackFunction, callbackData ) );
+    DAQmxErrChk( "DAQmxRegisterEveryNSamplesEvent", DAQmxRegisterEveryNSamplesEvent( taskId, DAQmx_Val_Acquired_Into_Buffer, nsamples, 0, TaskReadCallback, callbackData ) );
 #endif
 }

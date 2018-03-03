@@ -30,69 +30,48 @@ SpinEchoThread::~SpinEchoThread()
         delete data;
 }
 
-
-int32 CVICALLBACK SpinEchoThreadCallback(TaskHandle taskHandle, int32 everyNsamplesEventType, uInt32 nSamples, void *callbackData)
+void SpinEchoThread::registerSamples( float64 * samples )
 {
-    int32 read = 0;
-    float64 * newdata = new float64[2 * nSamples];
-
-    SpinEchoThread * thread = (SpinEchoThread*)callbackData;
-
-#ifndef LINUX_BOX
-    DAQmxReadAnalogF64( taskHandle, nSamples, 0.1, DAQmx_Val_GroupByScanNumber, newdata, 2 * nSamples, &read, NULL );
-#endif
-
-    bool ok = read == nSamples;
-
-    qDebug() << "read echo " << (thread->echo+1) << (ok ? "ok" : "failed");
-
-    if ( ok )
+    for ( int i = 0; i < nsamples; i++ )
     {
-        for ( int i = 0; i < nSamples; i++ )
-        {
-            thread->data[thread->echo * 3 * nSamples + 3 * i] += newdata[2*i];
-            thread->data[thread->echo * 3 * nSamples + 3 * i+1] += newdata[2*i+1];
-            thread->data[thread->echo * 3 * nSamples + 3 * i+2] = sqrt( pow( thread->data[thread->echo * 3 * nSamples + 3 * i], 2 ) + pow( thread->data[thread->echo * 3 * nSamples + 3 * i+1], 2 ));
-        }
-
-        for ( int i = 0; i < nSamples; i++ )
-        {
-            thread->seriesReal->append(thread->echo * nSamples + i, thread->data[thread->echo * 3 * nSamples + 3 * i] );
-            thread->seriesImag->append(thread->echo * nSamples + i, thread->data[thread->echo * 3 * nSamples + 3 * i+1] );
-            thread->seriesMod->append(thread->echo * nSamples + i, thread->data[thread->echo * 3 * nSamples + 3 * i+2] );
-        }
+        data[echo * 3 * nsamples + 3 * i] += samples[2*i];
+        data[echo * 3 * nsamples + 3 * i+1] += samples[2*i+1];
+        data[echo * 3 * nsamples + 3 * i+2] = sqrt( pow( data[echo * 3 * nsamples + 3 * i], 2 ) + pow( data[echo * 3 * nsamples + 3 * i+1], 2 ));
     }
 
-    delete newdata;
+    for ( int i = 0; i < nsamples; i++ )
+    {
+        seriesReal->append(echo * nsamples + i, data[echo * 3 * nsamples + 3 * i] );
+        seriesImag->append(echo * nsamples + i, data[echo * 3 * nsamples + 3 * i+1] );
+        seriesMod->append(echo * nsamples + i, data[echo * 3 * nsamples + 3 * i+2] );
+    }
 
-    thread->echo++;
+    echo++;
 
-    if ( thread->echo == thread->nechoes )
+    if ( echo == nechoes )
     {
         qDebug() << "updating UI";
 
-        thread->getParentWindow()->setChartSeriesReal(thread->seriesReal);
-        thread->getParentWindow()->setChartSeriesImag(thread->seriesImag);
-        thread->getParentWindow()->setChartSeriesMod(thread->seriesMod);
+        getParentWindow()->setChartSeriesReal(seriesReal);
+        getParentWindow()->setChartSeriesImag(seriesImag);
+        getParentWindow()->setChartSeriesMod(seriesMod);
 
-        thread->echo = 0;
+        echo = 0;
 
-        thread->seriesReal = new QLineSeries();
-        thread->seriesImag = new QLineSeries();
-        thread->seriesMod = new QLineSeries();
+        seriesReal = new QLineSeries();
+        seriesImag = new QLineSeries();
+        seriesMod = new QLineSeries();
     }
-
-    return 0;
 }
 
 void SpinEchoThread::createExperiment()
 {
     nechoes = Settings::getExperimentParameter( experiment, "nEchoes" ).toInt();
+    nsamples = Settings::getExperimentParameter( experiment, "nSamples" ).toInt();
 
     double tr = Settings::getExperimentParameter( experiment, "TR" ).toDouble();
     double t90 = Settings::getExperimentParameter( experiment, "T90" ).toDouble();
     double t180 = Settings::getExperimentParameter( experiment, "T180" ).toDouble();
-    int nsamples = Settings::getExperimentParameter( experiment, "nSamples" ).toInt();
     double techo = Settings::getExperimentParameter( experiment, "TEcho" ).toDouble();
     int32 nrepetitions = Settings::getExperimentParameter( experiment, "nRepetitions" ).toInt();
     int bandwidth = Settings::getExperimentParameter( experiment, "BandWidth" ).toInt();
@@ -107,7 +86,7 @@ void SpinEchoThread::createExperiment()
     taskAcqGate = new TaskAcquisitionGate( "taskAcqGate", tr, t90, t180, techo, nechoes, nsamples, bandwidth, 0 );
     taskAcqGate->createTask();
 
-    taskRead = new TaskRead( "taskRead", samplingrate, nsamples, SpinEchoThreadCallback, this );
+    taskRead = new TaskRead( "taskRead", samplingrate, nsamples, this );
     taskRead->createTask();
 }
 

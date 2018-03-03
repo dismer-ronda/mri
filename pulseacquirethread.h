@@ -16,6 +16,7 @@ class PulseAcquireThread : public ExperimentThread
 public:
     float64 * data;
     QString module;
+    int nsamples;
 
     PulseAcquireThread( QString binDir, const QString & experiment, MainWindow * parent );
     virtual ~PulseAcquireThread();
@@ -25,6 +26,8 @@ public:
 
     virtual int getProgressCount();
     virtual int getProgressTimer();
+
+    virtual void registerSamples( float64 * samples );
 };
 
 #endif // PulseAcquire_H

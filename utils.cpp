@@ -487,3 +487,82 @@ QString modifyStyleSheet( QString styleSheet, QString property, QString value )
 
     return generateStyleSheet( map );
 }
+
+void findMaxPos( double * values, int size, double & max, int & pos )
+{
+    max = values[0];
+    pos = 0;
+
+    for ( int i = 1; i < size; i++ )
+    {
+        if ( values[i] > max )
+        {
+            pos = i;
+            max = values[i];
+        }
+    }
+}
+
+double getAreaUnderMax( double * values, int size, double max, int pos, int & posMin, int & posMax )
+{
+    double area = 0;
+
+    int i = pos;
+    while ( values[i] > max/2 && i >= 0 )
+    {
+        posMin = i;
+        area += values[i--];
+    }
+
+    i = pos+1;
+    while ( values[i] > max/2 && i < size )
+    {
+        posMax = i;
+        area += values[i++];
+    }
+
+    return area;
+}
+
+void fftw( float64 * data, int nsamples )
+{
+#ifndef LINUX_BOX
+    fftw_complex *in, *out;
+    fftw_plan p;
+
+    in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * nsamples);
+    out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * nsamples);
+
+    for ( int i = 0; i < nsamples; i++ )
+    {
+        in[i][0] = data[2*i];
+        in[i][1] = data[2*i+1];
+    }
+
+    p = fftw_plan_dft_1d(nsamples, in, out, FFTW_FORWARD, FFTW_ESTIMATE);
+    fftw_execute(p);
+    fftw_destroy_plan(p);
+
+    for ( int i = 0; i < nsamples; i++ )
+    {
+        data[2*i] = out[i][0];
+        data[2*i+1] = out[i][1];
+    }
+
+    for ( int i = 0; i < nsamples/2; i++ )
+    {
+        float64 tempr = data[2*i];
+        float64 tempi = data[2*i+1];
+
+        data[2*i] = data[nsamples + 2*i];
+        data[2*i+1] = data[nsamples + 2*i+1];
+
+        data[nsamples + 2*i] = tempr;
+        data[nsamples + 2*i+1] = tempi;
+    }
+
+    fftw_free(in);
+    fftw_free(out);
+#endif
+}
+
