@@ -11,6 +11,14 @@ ExperimentThread::ExperimentThread( QString binDir, const QString & experiment, 
     this->binDir = binDir;
     this->parent = parent;
     this->experiment = experiment;
+
+    data = NULL;
+}
+
+ExperimentThread::~ExperimentThread()
+{
+    if ( data != NULL )
+        delete data;
 }
 
 bool ExperimentThread::isFinished()

@@ -30,10 +30,15 @@ protected:
     ExperimentTask * taskAcqGate;
     ExperimentTask * taskRead;
 
+    float64 * data;
+    QString module;
+    int nsamples;
+
 public:
     int errorCode;
 
     ExperimentThread( QString binDir, const QString & experiment, MainWindow * parent );
+    virtual ~ExperimentThread();
 
     bool isFinished();
     void setFinished( bool value );

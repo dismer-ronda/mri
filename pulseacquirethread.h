@@ -14,12 +14,7 @@ class PulseAcquireThread : public ExperimentThread
     Q_OBJECT
 
 public:
-    float64 * data;
-    QString module;
-    int nsamples;
-
     PulseAcquireThread( QString binDir, const QString & experiment, MainWindow * parent );
-    virtual ~PulseAcquireThread();
 
     virtual void createExperiment();
     virtual void startExperiment();

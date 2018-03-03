@@ -12,13 +12,6 @@ PulseAcquireThread::PulseAcquireThread( QString binDir, const QString & experime
     : ExperimentThread( binDir, experiment, parent )
 {
     qDebug() << "PulseAcquireThread";
-    data = NULL;
-}
-
-PulseAcquireThread::~PulseAcquireThread()
-{
-    if ( data != NULL )
-        delete data;
 }
 
 void PulseAcquireThread::registerSamples( float64 * samples )

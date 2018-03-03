@@ -13,7 +13,6 @@ SpinEchoThread::SpinEchoThread( QString binDir, const QString & experiment, Main
     qDebug() << "SpinEchoThread";
 
     seriesReal = seriesImag = seriesMod = NULL;
-    data = NULL;
 }
 
 SpinEchoThread::~SpinEchoThread()
@@ -26,9 +25,6 @@ SpinEchoThread::~SpinEchoThread()
 
     if ( seriesMod != NULL )
         delete seriesMod;
-
-    if ( data != NULL )
-        delete data;
 }
 
 void SpinEchoThread::registerSamples( float64 * samples )
@@ -37,17 +33,13 @@ void SpinEchoThread::registerSamples( float64 * samples )
     {
         data[echo * 3 * nsamples + 3 * i] += samples[2*i];
         data[echo * 3 * nsamples + 3 * i+1] += samples[2*i+1];
-        //data[echo * 3 * nsamples + 3 * i+2] = sqrt( pow( data[echo * 3 * nsamples + 3 * i], 2 ) + pow( data[echo * 3 * nsamples + 3 * i+1], 2 ));
-    }
 
-    for ( int i = 0; i < nsamples; i++ )
-    {
         seriesReal->append(echo * nsamples + i, data[echo * 3 * nsamples + 3 * i] );
         seriesImag->append(echo * nsamples + i, data[echo * 3 * nsamples + 3 * i+1] );
-        //seriesMod->append(echo * nsamples + i, data[echo * 3 * nsamples + 3 * i+2] );
     }
 
-//   if ( module.compare("fft" ) == 0 )
+#ifndef LINUX_BOX
+    if ( module.compare("fft" ) == 0 )
     {
         float64 * temp = new float64[nsamples*2];
 
@@ -60,11 +52,22 @@ void SpinEchoThread::registerSamples( float64 * samples )
         fftw( temp, nsamples );
 
         for ( int i = 0; i < nsamples; i++ )
-            seriesMod->append(echo * nsamples + i, sqrt( pow( temp[2 * i], 2 ) + pow( temp[2 * i+1], 2 )) );
+        {
+            data[echo * 3 * nsamples + 3 * i+2] = sqrt( pow( temp[2 * i], 2 ) + pow( temp[2 * i+1], 2 ));
+            seriesMod->append(echo * nsamples + i, data[echo * 3 * nsamples + 3 * i+2] );
+        }
 
         delete temp;
     }
-
+    else
+#endif
+    {
+        for ( int i = 0; i < nsamples; i++ )
+        {
+            data[echo * 3 * nsamples + 3 * i+2] += sqrt( pow( data[echo * 3 * nsamples + 3 * i], 2 ) + pow( data[echo * 3 * nsamples + 3 * i+1], 2 ) );
+            seriesMod->append(echo * nsamples + i, data[echo * 3 * nsamples + 3 * i+2] );
+        }
+    }
 
     echo++;
 
@@ -88,6 +91,7 @@ void SpinEchoThread::createExperiment()
 {
     nechoes = Settings::getExperimentParameter( experiment, "nEchoes" ).toInt();
     nsamples = Settings::getExperimentParameter( experiment, "nSamples" ).toInt();
+    module = Settings::getExperimentParameter( experiment, "Module" ).toString();
 
     double tr = Settings::getExperimentParameter( experiment, "TR" ).toDouble();
     double t90 = Settings::getExperimentParameter( experiment, "T90" ).toDouble();

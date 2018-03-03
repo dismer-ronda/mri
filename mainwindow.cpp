@@ -183,6 +183,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    if ( programmer1 != NULL )
+        delete programmer1;
 }
 
 void MainWindow::setFinished( bool value )
@@ -282,6 +284,9 @@ void MainWindow::startExperiment( const QString & name )
     QString type = Settings::getExperimentParameter( name, "Type" ).toString();
 
     qDebug() << type;
+
+    if ( programmer1 != NULL )
+        delete programmer1;
 
     if ( type.compare( "PulseAcquire" ) == 0 )
         programmer1 = new PulseAcquireThread( MainWindow::binDir, name, this );
