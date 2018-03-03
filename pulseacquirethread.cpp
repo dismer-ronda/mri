@@ -2,6 +2,7 @@
 #include <math.h>
 
 #include <QDebug>
+#include <QValueAxis>
 
 #include "pulseacquirethread.h"
 #include "mainwindow.h"

@@ -484,9 +484,15 @@ void MainWindow::updateExperimentsButtons()
     }
 }
 
-void MainWindow::setModChartAxis( QValueAxis * axis )
+void MainWindow::setModChartAxis( QAbstractAxis * axis )
 {
     chartMod->removeAxis( chartMod->axisX() );
     chartMod->addAxis( axis, Qt::AlignBottom );
-
 }
+
+void MainWindow::setModChartAxisDefault()
+{
+    chartMod->removeAxis( chartMod->axisX() );
+    chartMod->createDefaultAxes();
+}
+
