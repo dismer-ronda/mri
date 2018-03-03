@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include <QDebug>
+#include <QValueAxis>
 
 #include "spinechothread.h"
 #include "mainwindow.h"
@@ -36,15 +37,34 @@ void SpinEchoThread::registerSamples( float64 * samples )
     {
         data[echo * 3 * nsamples + 3 * i] += samples[2*i];
         data[echo * 3 * nsamples + 3 * i+1] += samples[2*i+1];
-        data[echo * 3 * nsamples + 3 * i+2] = sqrt( pow( data[echo * 3 * nsamples + 3 * i], 2 ) + pow( data[echo * 3 * nsamples + 3 * i+1], 2 ));
+        //data[echo * 3 * nsamples + 3 * i+2] = sqrt( pow( data[echo * 3 * nsamples + 3 * i], 2 ) + pow( data[echo * 3 * nsamples + 3 * i+1], 2 ));
     }
 
     for ( int i = 0; i < nsamples; i++ )
     {
         seriesReal->append(echo * nsamples + i, data[echo * 3 * nsamples + 3 * i] );
         seriesImag->append(echo * nsamples + i, data[echo * 3 * nsamples + 3 * i+1] );
-        seriesMod->append(echo * nsamples + i, data[echo * 3 * nsamples + 3 * i+2] );
+        //seriesMod->append(echo * nsamples + i, data[echo * 3 * nsamples + 3 * i+2] );
     }
+
+//   if ( module.compare("fft" ) == 0 )
+    {
+        float64 * temp = new float64[nsamples*2];
+
+        for ( int i = 0; i < nsamples; i++ )
+        {
+            temp[2*i] = data[echo * 3 * nsamples + 3 * i];
+            temp[2*i+1] = data[echo * 3 * nsamples + 3 * i+1];
+        }
+
+        fftw( temp, nsamples );
+
+        for ( int i = 0; i < nsamples; i++ )
+            seriesMod->append(echo * nsamples + i, sqrt( pow( temp[2 * i], 2 ) + pow( temp[2 * i+1], 2 )) );
+
+        delete temp;
+    }
+
 
     echo++;
 
@@ -89,7 +109,12 @@ void SpinEchoThread::createExperiment()
     taskRead = new TaskRead( "taskRead", samplingrate, nsamples, this );
     taskRead->createTask();
 
-    parent->setModChartAxisDefault();
+    QValueAxis * axis = new QValueAxis();
+    axis->setMin( 0 );
+    axis->setMax( nechoes * techo );
+
+    parent->setModChartAxis( axis );
+    //parent->setModChartAxisDefault();
 }
 
 int SpinEchoThread::getProgressCount()
