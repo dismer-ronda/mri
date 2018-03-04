@@ -69,3 +69,8 @@ QVariant Settings::getSetting( QString setting, QVariant def )
 {
     return instance->settings->value( QString( "%1" ).arg( setting ), QVariant( def ) );
 }
+
+QString Settings::getText( QString id )
+{
+    return instance->settings->value( QString( "words/%1.%2" ).arg( instance->settings->value( "language" ).toString() ).arg( id ), QVariant( id ) ).toString();
+}

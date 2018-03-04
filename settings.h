@@ -28,6 +28,7 @@ public:
     static void deleteExperiment( const QString & experiment );
 
     static QString getCustom( QString setup, QString def );
+    static QString getText( QString id );
 
 private:
     static Settings * instance;

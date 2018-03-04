@@ -58,18 +58,18 @@ MainWindow::MainWindow(QWidget *parent) :
     rowButtons->setGeometry( width - 3 * widthButtons, 0, 3 * widthButtons, heightButtons );
     rowButtons->show();
 
-    buttonTab1 = createButton( rowButtons, "Ejecución" );
+    buttonTab1 = createButton( rowButtons, Settings::getText( "execution" ) );
     buttonTab1->setStyleSheet( modifyStyleSheet( buttonTab1->styleSheet(), "background-color", QString( "#%1" ).arg( Settings::getCustom( "tab.selected", "FFFFFF" ) ) ) );
     buttonTab1->setGeometry( 0, 0, widthButtons, heightButtons );
     buttonTab1->show();
     connect(buttonTab1, SIGNAL(clicked()), this, SLOT(on_buttonTab1_clicked()));
 
-    buttonTab2 = createButton( rowButtons, "Configuración" );
+    buttonTab2 = createButton( rowButtons, Settings::getText( "configuration" ) );
     buttonTab2->setGeometry( widthButtons + border, 0, widthButtons, heightButtons );
     buttonTab2->show();
     connect(buttonTab2, SIGNAL(clicked()), this, SLOT(on_buttonTab2_clicked()));
 
-    buttonTerminate = createButton( rowButtons, "Terminar" );
+    buttonTerminate = createButton( rowButtons, Settings::getText( "finish" ) );
     buttonTerminate->setGeometry( widthButtons + widthButtons + 2 * border, 0, widthButtons, heightButtons );
     buttonTerminate->show();
     connect(buttonTerminate, SIGNAL(clicked()), this, SLOT(on_buttonTerminate_clicked()));
@@ -102,7 +102,7 @@ MainWindow::MainWindow(QWidget *parent) :
     labelHeader->setStyleSheet( QString( "font-size: %1px; font-weight: bold; color: #%2" )
                          .arg( Settings::getCustom( "label.fontSize", "24" ) )
                          .arg( Settings::getCustom( "label.color", "075B91" ) ) );
-    labelHeader->setText("Prepare la muestra y presione el botón correspondiente al experimento" );
+    labelHeader->setText( Settings::getText( "instructions" ) );
     labelHeader->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter );
     labelHeader->setGeometry( 0, 0, crTab1.right(), 2 * heightButtons );
 
@@ -115,7 +115,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QRect crSelect = rowSelectExperiment->geometry();
 
-    buttonStop = createButton( rowTop, "Detener" );
+    buttonStop = createButton( rowTop, Settings::getText( "stop" ) );
     buttonStop->setGeometry( 0, 2 * heightButtons, widthButtons, crSelect.height() );
     buttonStop->hide();
 
@@ -305,7 +305,16 @@ void MainWindow::startExperiment( const QString & name )
 
     progressBar->setMinimum(0);
     progressBar->setMaximum( programmer1->getProgressCount() );
+    progressBar->setAlignment(Qt::AlignHCenter|Qt::AlignCenter);
     progressBar->setValue(0);
+    progressBar->setStyleSheet( QString( "QProgressBar { border: %1px solid #%2; font-size: %3px; font-weight: bold; color: #%4; background-color: #%5 } "
+                                         "QProgressBar::chunk { background-color: #%6}" )
+                                .arg( Settings::getCustom( "progress.borderThickness", "5" ) )
+                                .arg( Settings::getCustom( "progress.borderColor", "075B91" ) )
+                                .arg( Settings::getCustom( "progress.fontSize", "16" ) )
+                                .arg( Settings::getCustom( "progress.color", "075B91" ) )
+                                .arg( Settings::getCustom( "progress.background", "FFFFFF" ) )
+                                .arg( Settings::getCustom( "progress.background.filled", "9A816A" ) ) );
 
     buttonTerminate->hide();
     rowSelectExperiment->hide();
@@ -319,7 +328,7 @@ void MainWindow::startExperiment( const QString & name )
     chartViewImag->show();
     chartViewMod->show();
 
-    labelHeader->setText("Presione el botón \"Detener\" para terminar el experimento" );
+    labelHeader->setText( Settings::getText( "stop.instructions" ) );
 
     timerId = startTimer( programmer1->getProgressTimer() );
 }
@@ -396,7 +405,7 @@ void MainWindow::timerEvent(QTimerEvent *event)
         buttonTab1->show();
         buttonTab2->show();
 
-        labelHeader->setText("Prepare la muestra y presione el botón correspondiente al experimento" );
+        labelHeader->setText( Settings::getText( "instructions" ) );
 
         if ( programmer1->errorCode != 0 )
             QMessageBox::question(this, "Error", "Error", QMessageBox::Ok);
