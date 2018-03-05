@@ -49,7 +49,7 @@ void SpinEchoThread::registerSamples( float64 * samples )
             temp[2*i+1] = data[echo * 3 * nsamples + 3 * i+1];
         }
 
-        fftw( temp, nsamples );
+        fftw( temp, nsamples, zeroOffset );
 
         for ( int i = 0; i < nsamples; i++ )
         {
@@ -89,9 +89,9 @@ void SpinEchoThread::registerSamples( float64 * samples )
 
 void SpinEchoThread::createExperiment()
 {
+    ExperimentThread::createExperiment();
+
     nechoes = Settings::getExperimentParameter( experiment, "nEchoes" ).toInt();
-    nsamples = Settings::getExperimentParameter( experiment, "nSamples" ).toInt();
-    module = Settings::getExperimentParameter( experiment, "Module" ).toString();
 
     double tr = Settings::getExperimentParameter( experiment, "TR" ).toDouble();
     double t90 = Settings::getExperimentParameter( experiment, "T90" ).toDouble();

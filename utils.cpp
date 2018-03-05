@@ -525,7 +525,7 @@ double getAreaUnderMax( double * values, int size, double max, int pos, int & po
     return area;
 }
 
-void fftw( float64 * data, int nsamples )
+void fftw( float64 * data, int nsamples, int zeroOffsets )
 {
 #ifndef LINUX_BOX
     fftw_complex *in, *out;
@@ -546,8 +546,15 @@ void fftw( float64 * data, int nsamples )
 
     for ( int i = 0; i < nsamples; i++ )
     {
-        data[2*i] = out[i][0];
-        data[2*i+1] = out[i][1];
+        if ( i < zeroOffsets || i > nsamples - 1 - zeroOffsets)
+        {
+            data[2*i] = data[2*i+1] = 0;
+        }
+        else
+        {
+            data[2*i] = out[i][0];
+            data[2*i+1] = out[i][1];
+        }
     }
 
     for ( int i = 0; i < nsamples/2; i++ )

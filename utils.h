@@ -67,6 +67,6 @@ QString modifyStyleSheet( QString styleSheet, QString property, QString value );
 void findMaxPos( double * values, int size, double & max, int & pos );
 double getAreaUnderMax( double * values, int size, double max, int pos );
 
-void fftw( float64 * data, int nsamples );
+void fftw( float64 * data, int nsamples, int zeroOffsets );
 
 #endif // UTILS_H

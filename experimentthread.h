@@ -31,8 +31,10 @@ protected:
     ExperimentTask * taskRead;
 
     float64 * data;
+
     QString module;
     int nsamples;
+    int zeroOffset;
 
 public:
     int errorCode;
@@ -43,11 +45,11 @@ public:
     bool isFinished();
     void setFinished( bool value );
 
-    virtual void createExperiment() = 0;
+    virtual void createExperiment();
+    virtual void startExperiment();
 
     void stopExperiment();
 
-    virtual void startExperiment();
     virtual int getProgressCount() = 0;
     virtual int getProgressTimer() = 0;
 

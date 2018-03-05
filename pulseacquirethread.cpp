@@ -35,7 +35,7 @@ void PulseAcquireThread::registerSamples( float64 * samples )
 #ifndef LINUX_BOX
     if ( module.compare("fft" ) == 0 )
     {
-        fftw( samples, nsamples );
+        fftw( samples, nsamples, zeroOffset );
 
         for ( int i = 0; i < nsamples; i++ )
             seriesMod->append(i, sqrt( pow(samples[2 * i], 2) + pow(samples[2 * i+1], 2) ) );
@@ -54,7 +54,7 @@ void PulseAcquireThread::registerSamples( float64 * samples )
 
 void PulseAcquireThread::createExperiment()
 {
-    nsamples = Settings::getExperimentParameter( experiment, "nSamples" ).toInt();
+    ExperimentThread::createExperiment();
 
     double tr = Settings::getExperimentParameter( experiment, "TR" ).toDouble();
     double t90 = Settings::getExperimentParameter( experiment, "T90" ).toDouble();
@@ -63,8 +63,6 @@ void PulseAcquireThread::createExperiment()
     int bandwidth = Settings::getExperimentParameter( experiment, "BandWidth" ).toInt();
     int samplingrate = Settings::getExperimentParameter( experiment, "SamplingRate" ).toInt();
     double ringdowndelay = Settings::getExperimentParameter( experiment, "RingDownDelay" ).toInt();
-
-    module = Settings::getExperimentParameter( experiment, "Module" ).toString();
 
     taskRepetitions = new TaskRepetitions( "taskRepetitions", tr, nrepetitions );
     taskRepetitions->createTask();

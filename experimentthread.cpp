@@ -78,6 +78,13 @@ MainWindow * ExperimentThread::getParentWindow()
     return parent;
 }
 
+void ExperimentThread::createExperiment()
+{
+    nsamples = Settings::getExperimentParameter( experiment, "nSamples" ).toInt();
+    zeroOffset = Settings::getExperimentParameter( experiment, "ZeroOffset" ).toInt();
+    module = Settings::getExperimentParameter( experiment, "Module" ).toString();
+}
+
 void ExperimentThread::startExperiment()
 {
     taskRFGate->startTask();

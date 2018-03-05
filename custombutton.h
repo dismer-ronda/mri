@@ -13,8 +13,6 @@ class CustomButton : public QPushButton
 public:
     CustomButton( QWidget * parent );
 
-    virtual bool event ( QEvent * e );
-
 private slots:
     void on_button_pressed();
     void on_button_released();
