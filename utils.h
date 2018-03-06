@@ -65,7 +65,7 @@ QString scanField( QString source, int &start, QString field );
 QString modifyStyleSheet( QString styleSheet, QString property, QString value );
 
 void findMaxPos( float64 * values, int size, double & max, int & pos );
-double getAreaUnderMax( float64 * values, int size, double max, int pos, int & posMin, int & posMax );
+double getAreaUnderMax( float64 * values, int size, float64 factor, float64 max, int pos, int & posMin, int & posMax );
 double getAreaUnderRegion( float64 * values, int posMin, int posMax );
 
 void fftw( float64 * data, int nsamples, int zeroOffsets );

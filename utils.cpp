@@ -504,19 +504,19 @@ void findMaxPos( float64 * values, int size, double & max, int & pos )
     }
 }
 
-float64 getAreaUnderMax( float64 * values, int size, double max, int pos, int & posMin, int & posMax )
+float64 getAreaUnderMax( float64 * values, int size, float64 factor, float64 max, int pos, int & posMin, int & posMax )
 {
     float64 area = 0;
 
     int i = pos;
-    while ( values[i] > max/2 && i >= 0 )
+    while ( values[i] > max * factor && i >= 0 )
     {
         posMin = i;
         area += values[i--];
     }
 
     i = pos+1;
-    while ( values[i] > max/2 && i < size )
+    while ( values[i] > max * factor && i < size )
     {
         posMax = i;
         area += values[i++];
