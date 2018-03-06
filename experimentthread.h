@@ -3,6 +3,7 @@
 
 #include <QThread>
 #include <QMutex>
+#include <QDialog>
 
 #include "utils.h"
 #include "mainwindow.h"
@@ -57,6 +58,7 @@ public:
     virtual int getProgressTimer() = 0;
 
     virtual void registerSamples( float64 * samples ) = 0;
+    virtual QDialog * getResultDialog() = 0;
 
     MainWindow * getParentWindow();
 

@@ -45,6 +45,8 @@ public:
 
     virtual void registerSamples( float64 * samples );
 
+    virtual QDialog * getResultDialog();
+
     QValueAxis * getFftAxis()
     {
         QValueAxis * axis = new QValueAxis();

@@ -13,6 +13,7 @@
 #include "experimentthread.h"
 #include "pulseacquirethread.h"
 #include "spinechothread.h"
+#include "messagedlg.h"
 
 QString MainWindow::binDir;
 
@@ -27,7 +28,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     Settings::loadSettings( binDir + "/setup.ini" );
 
-    QRect  screenGeometry = QGuiApplication::primaryScreen()->availableGeometry();
+    QRect screenGeometry = QGuiApplication::primaryScreen()->availableGeometry();
 
     int maxHeight = screenGeometry.height();
     int maxWidth = screenGeometry.width();
@@ -422,6 +423,12 @@ void MainWindow::timerEvent(QTimerEvent *event)
 
         if ( programmer1->errorCode != 0 )
             QMessageBox::question(this, "Error", "Error", QMessageBox::Ok);
+        else
+        {
+            QDialog * dlg = programmer1->getResultDialog();
+            if ( dlg != NULL )
+                dlg->exec();
+        }
     }
 }
 

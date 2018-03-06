@@ -23,6 +23,7 @@ public:
     virtual int getProgressTimer();
 
     virtual void registerSamples( float64 * samples );
+    virtual QDialog * getResultDialog() { return NULL; }
 };
 
 #endif // PulseAcquire_H

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <math.h>
 
 #include <QDebug>
 #include <QValueAxis>
@@ -6,6 +7,7 @@
 #include "spinechothread.h"
 #include "mainwindow.h"
 #include "settings.h"
+#include "messagedlg.h"
 
 SpinEchoThread::SpinEchoThread( QString binDir, const QString & experiment, MainWindow * parent )
     : ExperimentThread( binDir, experiment, parent )
@@ -232,3 +234,31 @@ void SpinEchoThread::startExperiment()
     model = new float64[nechoes * nsamples];
 }
 
+QDialog * SpinEchoThread::getResultDialog()
+{
+    float64 mx = 0;
+    float64 my = 0;
+
+    for ( int i = 0; i < nechoes; i++ )
+    {
+        mx += i* techo;
+        my += log(model[i]);
+    }
+
+    mx = mx / nechoes;
+    my = my / nechoes;
+
+    float64 sum1 = 0;
+    for ( int i = 0; i < nechoes; i++ )
+        sum1 += (i*techo - mx) * (log(model[i]) - my);
+
+    float64 sum2 = 0;
+    for ( int i = 0; i < nechoes; i++ )
+        sum2 += pow( i*techo - mx, 2 );
+
+    float64 t2 = sum2 != 0 ? -sum2/sum1 : 0;
+
+    MessageDialog * dlg = new MessageDialog( parent );
+    dlg->initComponents( QString( "T2 = %1" ).arg( t2 ) );
+    return dlg;
+}

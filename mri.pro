@@ -43,7 +43,8 @@ SOURCES += main.cpp\
     taskrfgate.cpp \
     taskacquisitiongate.cpp \
     taskread.cpp \
-    custombutton.cpp
+    custombutton.cpp \
+    messagedlg.cpp
 
 HEADERS  += mainwindow.h \
     NIDAQmx.h \
@@ -61,6 +62,7 @@ HEADERS  += mainwindow.h \
     taskacquisitiongate.h \
     taskread.h \
     custombutton.h \
-    fftw3.h
+    fftw3.h \
+    messagedlg.h
 
 FORMS    +=
