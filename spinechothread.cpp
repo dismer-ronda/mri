@@ -41,8 +41,8 @@ SpinEchoThread::~SpinEchoThread()
     if ( fft != NULL )
         delete fft;
 
-    if ( model != NULL )
-        delete model;
+    if ( echoMagnitude != NULL )
+        delete echoMagnitude;
 }
 
 void SpinEchoThread::registerSamples( float64 * samples )
@@ -85,12 +85,12 @@ void SpinEchoThread::registerSamples( float64 * samples )
         int pos;
         findMaxPos( temp1, nsamples, max, pos );
 
-        model[echo] = getAreaUnderMax( temp1, nsamples, echoFactor, max, pos, posMin, posMax );
+        echoMagnitude[echo] = getAreaUnderMax( temp1, nsamples, echoFactor, max, pos, posMin, posMax );
     }
     else
-        model[echo] = getAreaUnderRegion( temp1, posMin, posMax );
+        echoMagnitude[echo] = getAreaUnderRegion( temp1, posMin, posMax );
 
-    series5->append(echo, model[echo] );
+    series5->append(echo, echoMagnitude[echo] );
 
     delete temp;
     delete temp1;
@@ -231,34 +231,42 @@ void SpinEchoThread::startExperiment()
         data[i] = 0;
 
     fft = new float64[nechoes * nsamples];
-    model = new float64[nechoes * nsamples];
+    echoMagnitude = new float64[nechoes * nsamples];
 }
 
 QDialog * SpinEchoThread::getResultDialog()
 {
-    float64 mx = 0;
-    float64 my = 0;
-
-    for ( int i = 0; i < nechoes; i++ )
+    if ( nechoes > 1 )
     {
-        mx += i* techo;
-        my += log(model[i]);
+        float64 mx = 0;
+        float64 my = 0;
+
+        for ( int i = 0; i < nechoes; i++ )
+        {
+            mx += i * techo;
+            my += log( echoMagnitude[i] );
+        }
+
+        mx = mx / nechoes;
+        my = my / nechoes;
+
+        float64 sum1 = 0;
+        for ( int i = 0; i < nechoes; i++ )
+            sum1 += (i*techo - mx) * (log(echoMagnitude[i]) - my);
+
+        float64 sum2 = 0;
+        for ( int i = 0; i < nechoes; i++ )
+            sum2 += pow( i*techo - mx, 2 );
+
+        qDebug() << "sum1=" << sum1;
+        qDebug() << "sum2=" << sum2;
+
+        float64 t2 = sum1 != 0 ? -sum2/sum1 : 0;
+
+        MessageDialog * dlg = new MessageDialog( parent );
+        dlg->initComponents( QString( "T2 = %1" ).arg( t2 ) );
+        return dlg;
     }
-
-    mx = mx / nechoes;
-    my = my / nechoes;
-
-    float64 sum1 = 0;
-    for ( int i = 0; i < nechoes; i++ )
-        sum1 += (i*techo - mx) * (log(model[i]) - my);
-
-    float64 sum2 = 0;
-    for ( int i = 0; i < nechoes; i++ )
-        sum2 += pow( i*techo - mx, 2 );
-
-    float64 t2 = sum2 != 0 ? -sum2/sum1 : 0;
-
-    MessageDialog * dlg = new MessageDialog( parent );
-    dlg->initComponents( QString( "T2 = %1" ).arg( t2 ) );
-    return dlg;
+    else
+        return NULL;
 }

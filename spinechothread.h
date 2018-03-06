@@ -28,7 +28,7 @@ public:
     double techo;
 
     float64 * fft;
-    float64 * model;
+    float64 * echoMagnitude;
 
     int posMin, posMax;
     float64 echoFactor;
