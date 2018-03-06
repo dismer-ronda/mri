@@ -489,7 +489,7 @@ QString modifyStyleSheet( QString styleSheet, QString property, QString value )
     return generateStyleSheet( map );
 }
 
-void findMaxPos( double * values, int size, double & max, int & pos )
+void findMaxPos( float64 * values, int size, double & max, int & pos )
 {
     max = values[0];
     pos = 0;
@@ -504,9 +504,9 @@ void findMaxPos( double * values, int size, double & max, int & pos )
     }
 }
 
-double getAreaUnderMax( double * values, int size, double max, int pos, int & posMin, int & posMax )
+float64 getAreaUnderMax( float64 * values, int size, double max, int pos, int & posMin, int & posMax )
 {
-    double area = 0;
+    float64 area = 0;
 
     int i = pos;
     while ( values[i] > max/2 && i >= 0 )
@@ -521,6 +521,16 @@ double getAreaUnderMax( double * values, int size, double max, int pos, int & po
         posMax = i;
         area += values[i++];
     }
+
+    return area;
+}
+
+float64 getAreaUnderRegion( float64 * values, int posMin, int posMax )
+{
+    float64 area = 0;
+
+    for ( int i = posMin; i < posMax; i++ )
+        area += values[i];
 
     return area;
 }

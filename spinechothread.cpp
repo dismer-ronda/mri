@@ -38,6 +38,9 @@ SpinEchoThread::~SpinEchoThread()
 
     if ( fft != NULL )
         delete fft;
+
+    if ( model != NULL )
+        delete model;
 }
 
 void SpinEchoThread::registerSamples( float64 * samples )
@@ -53,16 +56,33 @@ void SpinEchoThread::registerSamples( float64 * samples )
         series3->append(echo * nsamples + i, sqrt( pow( data[echo * 2 * nsamples + 2 * i], 2 ) + pow( data[echo * 2 * nsamples + 2 * i+1], 2 ) ) );
     }
 
+    float64 * temp = new float64[2 * nsamples];
+
     for ( int i = 0; i < nsamples; i++ )
     {
-        fft[2*i] = data[echo * 2 * nsamples + 2 * i];
-        fft[2*i+1] = data[echo * 2 * nsamples + 2 * i+1];
+        temp[2*i] = data[echo * 2 * nsamples + 2 * i];
+        temp[2*i+1] = data[echo * 2 * nsamples + 2 * i+1];
     }
-
-    fftw( fft, nsamples, zeroOffset );
-
+    fftw( temp, nsamples, zeroOffset );
     for ( int i = 0; i < nsamples; i++ )
-        series4->append(echo * nsamples + i, sqrt( pow( fft[2 * i], 2 ) + pow( fft[2 * i+1], 2 ) ) );
+    {
+        fft[echo * nsamples + i] = sqrt( pow( temp[2 * i], 2 ) + pow( temp[2 * i+1], 2 ) );
+        series4->append(echo * nsamples + i, fft[echo * nsamples + i] );
+    }
+    delete temp;
+
+    if ( echo == 0 )
+    {
+        float64 max;
+        int pos;
+        findMaxPos( fft, nsamples, max, pos );
+
+        model[echo] = getAreaUnderMax( fft, nsamples, max, pos, posMin, posMax );
+    }
+    else
+        model[echo] = getAreaUnderRegion( fft, posMin, posMax );
+
+    series5->append(echo, model[echo] );
 
     echo++;
 
@@ -78,6 +98,8 @@ void SpinEchoThread::registerSamples( float64 * samples )
             getParentWindow()->setChartSeries1( series3 );
         else if ( graph1.compare( "fft" ) == 0 )
             getParentWindow()->setChartSeries1( series4 );
+        else if ( graph1.compare( "model fit" ) == 0 )
+            getParentWindow()->setChartSeries1( series5 );
 
         if ( graph2.compare( "real" ) == 0 )
             getParentWindow()->setChartSeries2( series1 );
@@ -87,6 +109,8 @@ void SpinEchoThread::registerSamples( float64 * samples )
             getParentWindow()->setChartSeries2( series3 );
         else if ( graph2.compare( "fft" ) == 0 )
             getParentWindow()->setChartSeries2( series4 );
+        else if ( graph2.compare( "model fit" ) == 0 )
+            getParentWindow()->setChartSeries2( series5 );
 
         if ( graph3.compare( "real" ) == 0 )
             getParentWindow()->setChartSeries3( series1 );
@@ -96,6 +120,8 @@ void SpinEchoThread::registerSamples( float64 * samples )
             getParentWindow()->setChartSeries3( series3 );
         else if ( graph3.compare( "fft" ) == 0 )
             getParentWindow()->setChartSeries3( series4 );
+        else if ( graph3.compare( "model fit" ) == 0 )
+            getParentWindow()->setChartSeries3( series5 );
 
         echo = 0;
 
@@ -191,6 +217,7 @@ void SpinEchoThread::startExperiment()
     for ( int i = 0; i < nechoes * 2 * nsamples; i++)
         data[i] = 0;
 
-    fft = new float64[nechoes * 2 * nsamples];
+    fft = new float64[nechoes * nsamples];
+    model = new float64[nechoes * nsamples];
 }
 

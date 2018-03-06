@@ -25,8 +25,12 @@ public:
     int nechoes;
     QString outputDir;
     QString name;
-    float64 * fft;
     double techo;
+
+    float64 * fft;
+    float64 * model;
+
+    int posMin, posMax;
 
     SpinEchoThread( QString binDir, const QString & experiment, MainWindow * parent );
     virtual ~SpinEchoThread();
