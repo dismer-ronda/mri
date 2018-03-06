@@ -494,7 +494,7 @@ void findMaxPos( float64 * values, int size, double & max, int & pos )
     max = values[0];
     pos = 0;
 
-    for ( int i = 1; i < size; i++ )
+    for ( int i = 0; i < size; i++ )
     {
         if ( values[i] > max )
         {

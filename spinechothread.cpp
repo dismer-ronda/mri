@@ -57,6 +57,7 @@ void SpinEchoThread::registerSamples( float64 * samples )
     }
 
     float64 * temp = new float64[2 * nsamples];
+    float64 * temp1 = new float64[nsamples];
 
     for ( int i = 0; i < nsamples; i++ )
     {
@@ -66,23 +67,27 @@ void SpinEchoThread::registerSamples( float64 * samples )
     fftw( temp, nsamples, zeroOffset );
     for ( int i = 0; i < nsamples; i++ )
     {
-        fft[echo * nsamples + i] = sqrt( pow( temp[2 * i], 2 ) + pow( temp[2 * i+1], 2 ) );
+        temp1[i] = sqrt( pow( temp[2 * i], 2 ) + pow( temp[2 * i+1], 2 ) );
+        fft[echo * nsamples + i] = temp[i];
+
         series4->append(echo * nsamples + i, fft[echo * nsamples + i] );
     }
-    delete temp;
 
     if ( echo == 0 )
     {
         float64 max;
         int pos;
-        findMaxPos( fft, nsamples, max, pos );
+        findMaxPos( temp1, nsamples, max, pos );
 
-        model[echo] = getAreaUnderMax( fft, nsamples, max, pos, posMin, posMax );
+        model[echo] = getAreaUnderMax( temp1, nsamples, max, pos, posMin, posMax );
     }
     else
-        model[echo] = getAreaUnderRegion( fft, posMin, posMax );
+        model[echo] = getAreaUnderRegion( temp1, posMin, posMax );
 
     series5->append(echo, model[echo] );
+
+    delete temp;
+    delete temp1;
 
     echo++;
 
