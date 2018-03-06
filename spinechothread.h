@@ -2,6 +2,7 @@
 #define SpinEchoThread_H
 
 #include <QThread>
+#include <QValueAxis>
 
 #include "utils.h"
 #include "mainwindow.h"
@@ -25,6 +26,7 @@ public:
     QString outputDir;
     QString name;
     float64 * fft;
+    double techo;
 
     SpinEchoThread( QString binDir, const QString & experiment, MainWindow * parent );
     virtual ~SpinEchoThread();
@@ -36,6 +38,14 @@ public:
     virtual int getProgressTimer();
 
     virtual void registerSamples( float64 * samples );
+
+    QValueAxis * getFftAxis()
+    {
+        QValueAxis * axis = new QValueAxis();
+        axis->setMin( 0 );
+        axis->setMax( nechoes * techo );
+        return axis;
+    }
 };
 
 #endif // SpinEchoThread_H

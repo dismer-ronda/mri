@@ -114,11 +114,11 @@ void SpinEchoThread::createExperiment()
 
     nechoes = Settings::getExperimentParameter( experiment, "nEchoes" ).toInt();
     outputDir = Settings::getSetting( "OutputDirectory", "c:\\" ).toString();
+    techo = Settings::getExperimentParameter( experiment, "TEcho" ).toDouble();
 
     double tr = Settings::getExperimentParameter( experiment, "TR" ).toDouble();
     double t90 = Settings::getExperimentParameter( experiment, "T90" ).toDouble();
     double t180 = Settings::getExperimentParameter( experiment, "T180" ).toDouble();
-    double techo = Settings::getExperimentParameter( experiment, "TEcho" ).toDouble();
     int32 nrepetitions = Settings::getExperimentParameter( experiment, "nRepetitions" ).toInt();
     int bandwidth = Settings::getExperimentParameter( experiment, "BandWidth" ).toInt();
     int samplingrate = Settings::getExperimentParameter( experiment, "SamplingRate" ).toInt();
@@ -135,12 +135,32 @@ void SpinEchoThread::createExperiment()
     taskRead = new TaskRead( "taskRead", samplingrate, nsamples, this );
     taskRead->createTask();
 
-    QValueAxis * axis = new QValueAxis();
-    axis->setMin( 0 );
-    axis->setMax( nechoes * techo );
+    if ( graph1.compare( "real" ) == 0 )
+        parent->setChart1AxisDefault();
+    else if ( graph1.compare( "imag" ) == 0 )
+        parent->setChart1AxisDefault();
+    else if ( graph1.compare( "mod" ) == 0 )
+        parent->setChart1AxisDefault();
+    else if ( graph1.compare( "fft" ) == 0 )
+        parent->setChart1Axis( getFftAxis() );
 
-    parent->setChart3Axis( axis );
-    //parent->setModChartAxisDefault();
+    if ( graph2.compare( "real" ) == 0 )
+        parent->setChart2AxisDefault();
+    else if ( graph2.compare( "imag" ) == 0 )
+        parent->setChart2AxisDefault();
+    else if ( graph2.compare( "mod" ) == 0 )
+        parent->setChart2AxisDefault();
+    else if ( graph2.compare( "fft" ) == 0 )
+        parent->setChart2Axis( getFftAxis() );
+
+    if ( graph3.compare( "real" ) == 0 )
+        parent->setChart3AxisDefault();
+    else if ( graph3.compare( "imag" ) == 0 )
+        parent->setChart3AxisDefault();
+    else if ( graph3.compare( "mod" ) == 0 )
+        parent->setChart3AxisDefault();
+    else if ( graph3.compare( "fft" ) == 0 )
+        parent->setChart3Axis( getFftAxis() );
 }
 
 int SpinEchoThread::getProgressCount()

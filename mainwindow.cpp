@@ -205,27 +205,35 @@ bool MainWindow::isFinished()
     return ret;
 }
 
-void MainWindow::setChartSeries1( QLineSeries * series )
+void MainWindow::setChartSeries( QLineSeries * seriesOrg, QLineSeries * seriesDest )
 {
     mutex.lock();
-    series1->clear();
-    series1->append(series->points());
+
+    seriesDest->clear();
+    QList<QPointF> points = seriesOrg->points();
+
+    for ( int i = 0; i < points.size(); i++ )
+    {
+        QPointF p = points.at(i);
+        seriesDest->append( i, p.ry() );
+    }
+
     mutex.unlock();
 }
+
+void MainWindow::setChartSeries1( QLineSeries * series )
+{
+    setChartSeries( series, series1 );
+}
+
 void MainWindow::setChartSeries2( QLineSeries * series )
 {
-    mutex.lock();
-    series2->clear();
-    series2->append(series->points());
-    mutex.unlock();
+    setChartSeries( series, series2 );
 }
 
 void MainWindow::setChartSeries3( QLineSeries * series )
 {
-    mutex.lock();
-    series3->clear();
-    series3->append(series->points());
-    mutex.unlock();
+    setChartSeries( series, series3 );
 }
 
 QLineSeries * MainWindow::getChartSeries1()
@@ -289,13 +297,17 @@ void MainWindow::startExperiment( const QString & name )
     else if ( type.compare("SpinEcho") == 0 )
         programmer1 = new SpinEchoThread( MainWindow::binDir, name, this );
 
+    series1->clear();
+    series2->clear();
+    series3->clear();
+
     chart1->removeAllSeries();
     chart2->removeAllSeries();
     chart3->removeAllSeries();
 
-    chartView1->update();
-    chartView2->update();
-    chartView3->update();
+    chartView1->hide();
+    chartView2->hide();
+    chartView3->hide();
 
     programmer1->start();
 
@@ -320,10 +332,6 @@ void MainWindow::startExperiment( const QString & name )
     progressBar->show();
     buttonStop->show();
 
-    chartView1->show();
-    chartView2->show();
-    chartView3->show();
-
     labelHeader->setText( Settings::getText( "stop.instructions" ) );
 
     timerId = startTimer( programmer1->getProgressTimer() );
@@ -342,6 +350,9 @@ void MainWindow::timerEvent(QTimerEvent *event)
 
         if ( series->count() > 0 )
         {
+            if ( !chartView1->isVisible() )
+                chartView1->show();
+
             chart1->removeAllSeries();
             chart1->addSeries(series);
 
@@ -352,6 +363,9 @@ void MainWindow::timerEvent(QTimerEvent *event)
 
         if ( series->count() > 0 )
         {
+            if ( !chartView2->isVisible() )
+                chartView2->show();
+
             chart2->removeAllSeries();
             chart2->addSeries(series);
 
@@ -362,6 +376,9 @@ void MainWindow::timerEvent(QTimerEvent *event)
 
         if ( series->count() > 0 )
         {
+            if ( !chartView3->isVisible() )
+                chartView3->show();
+
             chart3->removeAllSeries();
             chart3->addSeries(series);
 
@@ -529,4 +546,5 @@ void MainWindow::setChart3AxisDefault()
     chart3->removeAxis( chart3->axisX() );
     chart3->createDefaultAxes();
 }
+
 

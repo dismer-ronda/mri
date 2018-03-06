@@ -82,6 +82,8 @@ public:
     void setFinished( bool value );
     bool isFinished();
 
+    void setChartSeries( QLineSeries * seriesOrg, QLineSeries * seriesDest );
+
     void setChartSeries1( QLineSeries * series );
     void setChartSeries2( QLineSeries * series );
     void setChartSeries3( QLineSeries * series );
