@@ -13,6 +13,7 @@ SpinEchoThread::SpinEchoThread( QString binDir, const QString & experiment, Main
     qDebug() << "SpinEchoThread";
 
     series1 = series2 = series3 = series4 = series5 = series6 = NULL;
+    fft = NULL;
 }
 
 SpinEchoThread::~SpinEchoThread()
@@ -34,38 +35,34 @@ SpinEchoThread::~SpinEchoThread()
 
     if ( series6 != NULL )
         delete series6;
+
+    if ( fft != NULL )
+        delete fft;
 }
 
 void SpinEchoThread::registerSamples( float64 * samples )
 {
     for ( int i = 0; i < nsamples; i++ )
     {
-        data[echo * 3 * nsamples + 3 * i] += samples[2*i];
-        data[echo * 3 * nsamples + 3 * i+1] += samples[2*i+1];
-        data[echo * 3 * nsamples + 3 * i+2] += sqrt( pow( data[echo * 3 * nsamples + 3 * i], 2 ) + pow( data[echo * 3 * nsamples + 3 * i+1], 2 ) );
+        data[echo * 2 * nsamples + 2 * i] += samples[2*i];
+        data[echo * 2 * nsamples + 2 * i+1] += samples[2*i+1];
 
-        series1->append(echo * nsamples + i, data[echo * 3 * nsamples + 3 * i] );
-        series2->append(echo * nsamples + i, data[echo * 3 * nsamples + 3 * i+1] );
-        series3->append(echo * nsamples + i, data[echo * 3 * nsamples + 3 * i+2] );
+        series1->append(echo * nsamples + i, data[echo * 2 * nsamples + 2 * i] );
+        series2->append(echo * nsamples + i, data[echo * 2 * nsamples + 2 * i+1] );
+
+        series3->append(echo * nsamples + i, sqrt( pow( data[echo * 2 * nsamples + 2 * i], 2 ) + pow( data[echo * 2 * nsamples + 2 * i+1], 2 ) ) );
     }
-
-    float64 * temp = new float64[nsamples*2];
 
     for ( int i = 0; i < nsamples; i++ )
     {
-        temp[2*i] = data[echo * 3 * nsamples + 3 * i];
-        temp[2*i+1] = data[echo * 3 * nsamples + 3 * i+1];
+        fft[2*i] = data[echo * 2 * nsamples + 2 * i];
+        fft[2*i+1] = data[echo * 2 * nsamples + 2 * i+1];
     }
 
-    fftw( temp, nsamples, zeroOffset );
+    fftw( fft, nsamples, zeroOffset );
 
     for ( int i = 0; i < nsamples; i++ )
-    {
-        data[echo * 3 * nsamples + 3 * i+2] = sqrt( pow( temp[2 * i], 2 ) + pow( temp[2 * i+1], 2 ));
-        series4->append(echo * nsamples + i, data[echo * 3 * nsamples + 3 * i+2] );
-    }
-
-    delete temp;
+        series4->append(echo * nsamples + i, sqrt( pow( fft[2 * i], 2 ) + pow( fft[2 * i+1], 2 ) ) );
 
     echo++;
 
@@ -170,8 +167,10 @@ void SpinEchoThread::startExperiment()
     series6 = new QLineSeries();
 
     int nsamples = Settings::getExperimentParameter( experiment, "nSamples" ).toInt();
-    data = new float64[nechoes * 3 * nsamples];
-    for ( int i = 0; i < nechoes * 3 * nsamples; i++)
+    data = new float64[nechoes * 2 * nsamples];
+    for ( int i = 0; i < nechoes * 2 * nsamples; i++)
         data[i] = 0;
+
+    fft = new float64[nechoes * 2 * nsamples];
 }
 

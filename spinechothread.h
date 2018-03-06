@@ -24,6 +24,7 @@ public:
     int nechoes;
     QString outputDir;
     QString name;
+    float64 * fft;
 
     SpinEchoThread( QString binDir, const QString & experiment, MainWindow * parent );
     virtual ~SpinEchoThread();
