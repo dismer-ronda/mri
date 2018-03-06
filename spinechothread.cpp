@@ -73,31 +73,31 @@ void SpinEchoThread::registerSamples( float64 * samples )
     {
         qDebug() << "updating UI";
 
-        if ( graph1.compare( "real" ) )
+        if ( graph1.compare( "real" ) == 0 )
             getParentWindow()->setChartSeries1( series1 );
-        else if ( graph1.compare( "imag" ) )
+        else if ( graph1.compare( "imag" ) == 0 )
             getParentWindow()->setChartSeries1( series2 );
-        else if ( graph1.compare( "mod" ) )
+        else if ( graph1.compare( "mod" ) == 0 )
             getParentWindow()->setChartSeries1( series3 );
-        else if ( graph1.compare( "fft" ) )
+        else if ( graph1.compare( "fft" ) == 0 )
             getParentWindow()->setChartSeries1( series4 );
 
-        if ( graph2.compare( "real" ) )
+        if ( graph2.compare( "real" ) == 0 )
             getParentWindow()->setChartSeries2( series1 );
-        else if ( graph2.compare( "imag" ) )
+        else if ( graph2.compare( "imag" ) == 0 )
             getParentWindow()->setChartSeries2( series2 );
-        else if ( graph2.compare( "mod" ) )
+        else if ( graph2.compare( "mod" ) == 0 )
             getParentWindow()->setChartSeries2( series3 );
-        else if ( graph2.compare( "fft" ) )
+        else if ( graph2.compare( "fft" ) == 0 )
             getParentWindow()->setChartSeries2( series4 );
 
-        if ( graph3.compare( "real" ) )
+        if ( graph3.compare( "real" ) == 0 )
             getParentWindow()->setChartSeries3( series1 );
-        else if ( graph3.compare( "imag" ) )
+        else if ( graph3.compare( "imag" ) == 0 )
             getParentWindow()->setChartSeries3( series2 );
-        else if ( graph3.compare( "mod" ) )
+        else if ( graph3.compare( "mod" ) == 0 )
             getParentWindow()->setChartSeries3( series3 );
-        else if ( graph3.compare( "fft" ) )
+        else if ( graph3.compare( "fft" ) == 0 )
             getParentWindow()->setChartSeries3( series4 );
 
         echo = 0;
