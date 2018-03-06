@@ -32,6 +32,7 @@ public:
 
     int posMin, posMax;
     float64 echoFactor;
+    bool simulation;
 
     SpinEchoThread( QString binDir, const QString & experiment, MainWindow * parent );
     virtual ~SpinEchoThread();

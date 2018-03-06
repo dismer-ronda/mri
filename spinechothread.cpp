@@ -67,11 +67,11 @@ void SpinEchoThread::registerSamples( float64 * samples )
     fftw( temp, nsamples, zeroOffset );
     for ( int i = 0; i < nsamples; i++ )
     {
-#ifdef SIMULATION
-        temp1[i] = (echo == 0 ? 1 : exp( -echo * techo/0.08 ) ) * sqrt( pow( temp[2 * i], 2 ) + pow( temp[2 * i+1], 2 ) );
-#else
-        temp1[i] = sqrt( pow( temp[2 * i], 2 ) + pow( temp[2 * i+1], 2 ) );
-#endif
+        if ( simulation )
+            temp1[i] = (echo == 0 ? 1 : exp( -echo * techo/0.08 ) ) * sqrt( pow( temp[2 * i], 2 ) + pow( temp[2 * i+1], 2 ) );
+        else
+            temp1[i] = sqrt( pow( temp[2 * i], 2 ) + pow( temp[2 * i+1], 2 ) );
+
         fft[echo * nsamples + i] = temp1[i];
 
         series4->append(echo * nsamples + i, fft[echo * nsamples + i] );
@@ -151,6 +151,7 @@ void SpinEchoThread::createExperiment()
     outputDir = Settings::getSetting( "OutputDirectory", "c:\\" ).toString();
     techo = Settings::getExperimentParameter( experiment, "TEcho" ).toDouble();
     echoFactor = Settings::getExperimentParameter( experiment, "EchoFactor" ).toDouble();
+    simulation = Settings::getExperimentParameter( experiment, "Simulation" ).toBool();
 
     double tr = Settings::getExperimentParameter( experiment, "TR" ).toDouble();
     double t90 = Settings::getExperimentParameter( experiment, "T90" ).toDouble();
