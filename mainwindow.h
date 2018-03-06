@@ -36,18 +36,18 @@ class MainWindow : public QMainWindow
     QStringList experiments;
     QStringListModel * model;
 
-    QLineSeries * seriesReal;
-    QLineSeries * seriesImag;
-    QLineSeries * seriesMod;
+    QLineSeries * series1;
+    QLineSeries * series2;
+    QLineSeries * series3;
 
-    QChart *chartReal;
-    QChartView *chartViewReal;
+    QChart *chart1;
+    QChartView *chartView1;
 
-    QChart *chartImag;
-    QChartView *chartViewImag;
+    QChart *chart2;
+    QChartView *chartView2;
 
-    QChart *chartMod;
-    QChartView *chartViewMod;
+    QChart *chart3;
+    QChartView *chartView3;
 
     QWidget * tab1;
     QWidget * tab2;
@@ -82,19 +82,25 @@ public:
     void setFinished( bool value );
     bool isFinished();
 
-    void setChartSeriesReal( QLineSeries * series );
-    void setChartSeriesImag( QLineSeries * series );
-    void setChartSeriesMod( QLineSeries * series );
+    void setChartSeries1( QLineSeries * series );
+    void setChartSeries2( QLineSeries * series );
+    void setChartSeries3( QLineSeries * series );
 
-    QLineSeries * getChartSeriesReal();
-    QLineSeries * getChartSeriesImag();
-    QLineSeries * getChartSeriesMod();
+    QLineSeries * getChartSeries1();
+    QLineSeries * getChartSeries2();
+    QLineSeries * getChartSeries3();
 
     void startExperiment( const QString & name );
     void updateExperimentsButtons();
 
-    void setModChartAxis( QAbstractAxis * axis );
-    void setModChartAxisDefault();
+    void setChart1Axis( QAbstractAxis * axis );
+    void setChart1AxisDefault();
+
+    void setChart2Axis( QAbstractAxis * axis );
+    void setChart2AxisDefault();
+
+    void setChart3Axis( QAbstractAxis * axis );
+    void setChart3AxisDefault();
 
 private slots:
     void on_buttonTerminate_clicked();

@@ -133,28 +133,26 @@ MainWindow::MainWindow(QWidget *parent) :
     QRect cr5 = rowBottom->geometry();
     int widthSignal = cr5.width() / 3;
 
-    chartReal = new QChart();
-    chartReal->legend()->hide();
-    chartReal->createDefaultAxes();
-    chartViewReal = new QChartView(chartReal, rowBottom);
-    chartViewReal->setRenderHint(QPainter::Antialiasing);
-    chartViewReal->setGeometry(0, 0, widthSignal, cr5.height() );
-    chartViewReal->hide();
+    chart1 = new QChart();
+    chart1->legend()->hide();
+    chartView1 = new QChartView(chart1, rowBottom);
+    chartView1->setRenderHint(QPainter::Antialiasing);
+    chartView1->setGeometry(0, 0, widthSignal, cr5.height() );
+    chartView1->hide();
 
-    chartImag = new QChart();
-    chartImag->legend()->hide();
-    chartImag->createDefaultAxes();
-    chartViewImag = new QChartView(chartImag, rowBottom);
-    chartViewImag->setRenderHint(QPainter::Antialiasing);
-    chartViewImag->setGeometry(widthSignal, 0, widthSignal, cr5.height() );
-    chartViewImag->hide();
+    chart2 = new QChart();
+    chart2->legend()->hide();
+    chartView2 = new QChartView(chart2, rowBottom);
+    chartView2->setRenderHint(QPainter::Antialiasing);
+    chartView2->setGeometry(widthSignal, 0, widthSignal, cr5.height() );
+    chartView2->hide();
 
-    chartMod = new QChart();
-    chartMod->legend()->hide();
-    chartViewMod = new QChartView(chartMod, rowBottom);
-    chartViewMod->setRenderHint(QPainter::Antialiasing);
-    chartViewMod->setGeometry(2 * widthSignal, 0, widthSignal, cr5.height() );
-    chartViewMod->hide();
+    chart3 = new QChart();
+    chart3->legend()->hide();
+    chartView3 = new QChartView(chart3, rowBottom);
+    chartView3->setRenderHint(QPainter::Antialiasing);
+    chartView3->setGeometry(2 * widthSignal, 0, widthSignal, cr5.height() );
+    chartView3->hide();
 
     tab2 = new QWidget( tabContents );
     tab2->setStyleSheet( QString( "font-size: %1px; font-weight: bold; color: #%2" )
@@ -174,9 +172,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     programmer1 = NULL;
 
-    seriesReal = NULL;
-    seriesImag = NULL;
-    seriesMod = NULL;
+    series1 = new QLineSeries();
+    series2 = new QLineSeries();
+    series3 = new QLineSeries();
 
     experimentsChanged = false;
 }
@@ -185,6 +183,10 @@ MainWindow::~MainWindow()
 {
     if ( programmer1 != NULL )
         delete programmer1;
+
+    delete series1;
+    delete series2;
+    delete series3;
 }
 
 void MainWindow::setFinished( bool value )
@@ -203,74 +205,68 @@ bool MainWindow::isFinished()
     return ret;
 }
 
-void MainWindow::setChartSeriesReal( QLineSeries * series )
+void MainWindow::setChartSeries1( QLineSeries * series )
 {
     mutex.lock();
-    if ( seriesReal != NULL )
-        delete seriesReal;
-    seriesReal = series;
+    series1->clear();
+    series1->append(series->points());
     mutex.unlock();
 }
-void MainWindow::setChartSeriesImag( QLineSeries * series )
+void MainWindow::setChartSeries2( QLineSeries * series )
 {
     mutex.lock();
-    if ( seriesImag != NULL )
-        delete seriesImag;
-    seriesImag = series;
-    mutex.unlock();
-}
-
-void MainWindow::setChartSeriesMod( QLineSeries * series )
-{
-    mutex.lock();
-    if ( seriesMod != NULL )
-        delete seriesMod;
-    seriesMod = series;
+    series2->clear();
+    series2->append(series->points());
     mutex.unlock();
 }
 
-QLineSeries * MainWindow::getChartSeriesReal()
+void MainWindow::setChartSeries3( QLineSeries * series )
+{
+    mutex.lock();
+    series3->clear();
+    series3->append(series->points());
+    mutex.unlock();
+}
+
+QLineSeries * MainWindow::getChartSeries1()
 {
     QLineSeries * ret = new QLineSeries();
 
     mutex.lock();
-    if ( seriesReal != NULL )
+    if ( series1 != NULL )
     {
-        ret->append( seriesReal->points() );
-        delete seriesReal;
-        seriesReal = NULL;
+        ret->append( series1->points() );
+        series1->clear();
     }
     mutex.unlock();
 
     return ret;
 }
 
-QLineSeries * MainWindow::getChartSeriesImag()
+QLineSeries * MainWindow::getChartSeries2()
 {
     QLineSeries * ret = new QLineSeries();
 
     mutex.lock();
-    if ( seriesImag != NULL )
+    if ( series2 != NULL )
     {
-        ret->append( seriesImag->points() );
-        delete seriesImag;
-        seriesImag = NULL;
+        ret->append( series2->points() );
+        series2->clear();
     }
     mutex.unlock();
 
     return ret;
 }
 
-QLineSeries * MainWindow::getChartSeriesMod()
+QLineSeries * MainWindow::getChartSeries3()
 {
     QLineSeries * ret = new QLineSeries();
 
     mutex.lock();
-    if ( seriesMod != NULL )
+    if ( series3 != NULL )
     {
-        ret->append( seriesMod->points() );
-        delete seriesMod;
-        seriesMod = NULL;
+        ret->append( series3->points() );
+        series3->clear();
     }
     mutex.unlock();
 
@@ -293,13 +289,13 @@ void MainWindow::startExperiment( const QString & name )
     else if ( type.compare("SpinEcho") == 0 )
         programmer1 = new SpinEchoThread( MainWindow::binDir, name, this );
 
-    chartReal->removeAllSeries();
-    chartImag->removeAllSeries();
-    chartMod->removeAllSeries();
+    chart1->removeAllSeries();
+    chart2->removeAllSeries();
+    chart3->removeAllSeries();
 
-    chartViewReal->update();
-    chartViewImag->update();
-    chartViewMod->update();
+    chartView1->update();
+    chartView2->update();
+    chartView3->update();
 
     programmer1->start();
 
@@ -324,9 +320,9 @@ void MainWindow::startExperiment( const QString & name )
     progressBar->show();
     buttonStop->show();
 
-    chartViewReal->show();
-    chartViewImag->show();
-    chartViewMod->show();
+    chartView1->show();
+    chartView2->show();
+    chartView3->show();
 
     labelHeader->setText( Settings::getText( "stop.instructions" ) );
 
@@ -342,34 +338,34 @@ void MainWindow::timerEvent(QTimerEvent *event)
         
         progressBar->setValue( value );
 
-        QLineSeries * series = getChartSeriesReal();
+        QLineSeries * series = getChartSeries1();
 
         if ( series->count() > 0 )
         {
-            chartReal->removeAllSeries();
-            chartReal->addSeries(series);
+            chart1->removeAllSeries();
+            chart1->addSeries(series);
 
-            chartViewReal->update();
+            chartView1->update();
         }
 
-        series = getChartSeriesImag();
+        series = getChartSeries2();
 
         if ( series->count() > 0 )
         {
-            chartImag->removeAllSeries();
-            chartImag->addSeries(series);
+            chart2->removeAllSeries();
+            chart2->addSeries(series);
 
-            chartViewImag->update();
+            chartView2->update();
         }
 
-        series = getChartSeriesMod();
+        series = getChartSeries3();
 
         if ( series->count() > 0 )
         {
-            chartMod->removeAllSeries();
-            chartMod->addSeries(series);
+            chart3->removeAllSeries();
+            chart3->addSeries(series);
 
-            chartViewMod->update();
+            chartView3->update();
         }
 
         if ( value == size )
@@ -393,9 +389,9 @@ void MainWindow::timerEvent(QTimerEvent *event)
     {
         killTimer(timerId);
 
-        chartViewReal->hide();
-        chartViewImag->hide();
-        chartViewMod->hide();
+        chartView1->hide();
+        chartView2->hide();
+        chartView3->hide();
 
         progressBar->hide();
         buttonStop->hide();
@@ -498,15 +494,39 @@ void MainWindow::updateExperimentsButtons()
     }
 }
 
-void MainWindow::setModChartAxis( QAbstractAxis * axis )
+void MainWindow::setChart1Axis( QAbstractAxis * axis )
 {
-    chartMod->removeAxis( chartMod->axisX() );
-    chartMod->addAxis( axis, Qt::AlignBottom );
+    chart1->removeAxis( chart1->axisX() );
+    chart1->addAxis( axis, Qt::AlignBottom );
 }
 
-void MainWindow::setModChartAxisDefault()
+void MainWindow::setChart1AxisDefault()
 {
-    chartMod->removeAxis( chartMod->axisX() );
-    chartMod->createDefaultAxes();
+    chart1->removeAxis( chart1->axisX() );
+    chart1->createDefaultAxes();
+}
+
+void MainWindow::setChart2Axis( QAbstractAxis * axis )
+{
+    chart2->removeAxis( chart2->axisX() );
+    chart2->addAxis( axis, Qt::AlignBottom );
+}
+
+void MainWindow::setChart2AxisDefault()
+{
+    chart2->removeAxis( chart2->axisX() );
+    chart2->createDefaultAxes();
+}
+
+void MainWindow::setChart3Axis( QAbstractAxis * axis )
+{
+    chart3->removeAxis( chart3->axisX() );
+    chart3->addAxis( axis, Qt::AlignBottom );
+}
+
+void MainWindow::setChart3AxisDefault()
+{
+    chart3->removeAxis( chart3->axisX() );
+    chart3->createDefaultAxes();
 }
 

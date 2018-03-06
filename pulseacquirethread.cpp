@@ -16,40 +16,61 @@ PulseAcquireThread::PulseAcquireThread( QString binDir, const QString & experime
 
 void PulseAcquireThread::registerSamples( float64 * samples )
 {
-    QLineSeries * seriesReal = new QLineSeries();
-    QLineSeries * seriesImag = new QLineSeries();
-    QLineSeries * seriesMod = new QLineSeries();
+    QLineSeries * series1 = new QLineSeries();
+    QLineSeries * series2 = new QLineSeries();
+    QLineSeries * series3 = new QLineSeries();
+    QLineSeries * series4 = new QLineSeries();
 
     for ( int i = 0; i < nsamples; i++ )
     {
         data[2 * i] += samples[2*i];
-        seriesReal->append(i, data[2 * i] );
+        series1->append(i, data[2 * i] );
     }
 
     for ( int i = 0; i < nsamples; i++ )
     {
         data[2 * i+1] += samples[2*i+1];
-        seriesImag->append(i, data[2 * i+1] );
+        series2->append(i, data[2 * i+1] );
     }
 
-#ifndef LINUX_BOX
-    if ( module.compare("fft" ) == 0 )
-    {
-        fftw( samples, nsamples, zeroOffset );
+    for ( int i = 0; i < nsamples; i++ )
+        series3 ->append(i, sqrt( pow(data[2 * i], 2) + pow(data[2 * i+1], 2) ) );
 
-        for ( int i = 0; i < nsamples; i++ )
-            seriesMod->append(i, sqrt( pow(samples[2 * i], 2) + pow(samples[2 * i+1], 2) ) );
-    }
-    else
-#endif
-    {
-        for ( int i = 0; i < nsamples; i++ )
-            seriesMod->append(i, sqrt( pow(data[2 * i], 2) + pow(data[2 * i+1], 2) ) );
-    }
+    fftw( samples, nsamples, zeroOffset );
+    for ( int i = 0; i < nsamples; i++ )
+        series4->append(i, sqrt( pow(samples[2 * i], 2) + pow(samples[2 * i+1], 2) ) );
 
-    getParentWindow()->setChartSeriesReal(seriesReal);
-    getParentWindow()->setChartSeriesImag(seriesImag);
-    getParentWindow()->setChartSeriesMod(seriesMod);
+    if ( graph1.compare( "real" ) )
+        getParentWindow()->setChartSeries1( series1 );
+    else if ( graph1.compare( "imag" ) )
+        getParentWindow()->setChartSeries1( series2 );
+    else if ( graph1.compare( "mod" ) )
+        getParentWindow()->setChartSeries1( series3 );
+    else if ( graph1.compare( "fft" ) )
+        getParentWindow()->setChartSeries1( series4 );
+
+    if ( graph2.compare( "real" ) )
+        getParentWindow()->setChartSeries2( series1 );
+    else if ( graph2.compare( "imag" ) )
+        getParentWindow()->setChartSeries2( series2 );
+    else if ( graph2.compare( "mod" ) )
+        getParentWindow()->setChartSeries2( series3 );
+    else if ( graph2.compare( "fft" ) )
+        getParentWindow()->setChartSeries2( series4 );
+
+    if ( graph3.compare( "real" ) )
+        getParentWindow()->setChartSeries3( series1 );
+    else if ( graph3.compare( "imag" ) )
+        getParentWindow()->setChartSeries3( series2 );
+    else if ( graph3.compare( "mod" ) )
+        getParentWindow()->setChartSeries3( series3 );
+    else if ( graph3.compare( "fft" ) )
+        getParentWindow()->setChartSeries3( series4 );
+
+    delete series1;
+    delete series2;
+    delete series3;
+    delete series4;
 }
 
 void PulseAcquireThread::createExperiment()
@@ -83,7 +104,7 @@ void PulseAcquireThread::createExperiment()
         axis->setMin( -bandwidth/2 );
         axis->setMax( bandwidth/2 );
 
-        parent->setModChartAxis( axis );
+        parent->setChart3Axis( axis );
     }
 #endif
 }

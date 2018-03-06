@@ -13,12 +13,17 @@ class SpinEchoThread : public ExperimentThread
     Q_OBJECT
 
 public:
-    QLineSeries * seriesReal;
-    QLineSeries * seriesImag;
-    QLineSeries * seriesMod;
+    QLineSeries * series1;
+    QLineSeries * series2;
+    QLineSeries * series3;
+    QLineSeries * series4;
+    QLineSeries * series5;
+    QLineSeries * series6;
 
     int echo;
     int nechoes;
+    QString outputDir;
+    QString name;
 
     SpinEchoThread( QString binDir, const QString & experiment, MainWindow * parent );
     virtual ~SpinEchoThread();

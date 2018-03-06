@@ -32,7 +32,10 @@ protected:
 
     float64 * data;
 
-    QString module;
+    QString graph1;
+    QString graph2;
+    QString graph3;
+
     int nsamples;
     int zeroOffset;
 

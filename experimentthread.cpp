@@ -82,7 +82,9 @@ void ExperimentThread::createExperiment()
 {
     nsamples = Settings::getExperimentParameter( experiment, "nSamples" ).toInt();
     zeroOffset = Settings::getExperimentParameter( experiment, "ZeroOffset" ).toInt();
-    module = Settings::getExperimentParameter( experiment, "Module" ).toString();
+    graph1 = Settings::getExperimentParameter( experiment, "Graph1" ).toString();
+    graph2 = Settings::getExperimentParameter( experiment, "Graph2" ).toString();
+    graph3 = Settings::getExperimentParameter( experiment, "Graph3" ).toString();
 }
 
 void ExperimentThread::startExperiment()
