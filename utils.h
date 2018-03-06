@@ -70,4 +70,8 @@ double getAreaUnderRegion( float64 * values, int posMin, int posMax );
 
 void fftw( float64 * data, int nsamples, int zeroOffsets );
 
+void writeRawDataFile( const QString & fileName, const QString &header, float64 * data, int nsamples );
+void writeFFTDataFile( const QString & fileName, const QString &header, float64 * fft, int nsamples );
+void writeEchoMagnitude( const QString & fileName, const QString &header, float64 * echoMagnitude, int nechoes );
+
 #endif // UTILS_H

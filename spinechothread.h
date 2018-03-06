@@ -26,6 +26,12 @@ public:
     QString outputDir;
     QString name;
     double techo;
+    double trep;
+    double t90;
+    double t180;
+    int32 nrepetitions;
+    int bandwidth;
+    int samplingrate;
 
     float64 * fft;
     float64 * echoMagnitude;
@@ -54,6 +60,8 @@ public:
         axis->setMax( nechoes * techo );
         return axis;
     }
+
+    float64 calculateT2();
 };
 
 #endif // SpinEchoThread_H

@@ -430,6 +430,56 @@ void writeTextFile( const QString & fileName, const QString & text )
     file.close();
 }
 
+void writeRawDataFile( const QString & fileName, const QString &header, float64 * data, int nsamples )
+{
+    qDebug() << fileName;
+
+    QFile file( fileName  );
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+        return ;
+
+    QTextStream out(&file);
+
+    out << header;
+    for ( int i = 0; i < nsamples; i++ )
+        out << data[2*i] << "," << data[2*i+1] << "\n";
+
+    file.flush();
+    file.close();
+}
+
+void writeFFTDataFile( const QString & fileName, const QString &header, float64 * fft, int nsamples )
+{
+    QFile file( fileName  );
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+        return ;
+
+    QTextStream out(&file);
+
+    out << header;
+    for ( int i = 0; i < nsamples; i++ )
+        out << fft[i] << "\n";
+
+    file.flush();
+    file.close();
+}
+
+void writeEchoMagnitude( const QString & fileName, const QString &header, float64 * echoMagnitude, int nechoes )
+{
+    QFile file( fileName  );
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+        return ;
+
+    QTextStream out(&file);
+
+    out << header;
+    for ( int i = 0; i < nechoes; i++ )
+        out << echoMagnitude[i] << "\n";
+
+    file.flush();
+    file.close();
+}
+
 QString scanStyleSheetField( QString source, int &start, QString & field )
 {
     while ( start < source.length() && source.at(start) != ':' )

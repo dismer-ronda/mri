@@ -3,6 +3,7 @@
 
 #include <QDebug>
 #include <QValueAxis>
+#include <QDateTime>
 
 #include "spinechothread.h"
 #include "mainwindow.h"
@@ -154,21 +155,22 @@ void SpinEchoThread::createExperiment()
     techo = Settings::getExperimentParameter( experiment, "TEcho" ).toDouble();
     echoFactor = Settings::getExperimentParameter( experiment, "EchoFactor" ).toDouble();
     simulation = Settings::getExperimentParameter( experiment, "Simulation" ).toBool();
+    name = Settings::getExperimentParameter( experiment, "Name" ).toString();
 
-    double tr = Settings::getExperimentParameter( experiment, "TR" ).toDouble();
-    double t90 = Settings::getExperimentParameter( experiment, "T90" ).toDouble();
-    double t180 = Settings::getExperimentParameter( experiment, "T180" ).toDouble();
-    int32 nrepetitions = Settings::getExperimentParameter( experiment, "nRepetitions" ).toInt();
-    int bandwidth = Settings::getExperimentParameter( experiment, "BandWidth" ).toInt();
-    int samplingrate = Settings::getExperimentParameter( experiment, "SamplingRate" ).toInt();
+    trep = Settings::getExperimentParameter( experiment, "TR" ).toDouble();
+    t90 = Settings::getExperimentParameter( experiment, "T90" ).toDouble();
+    t180 = Settings::getExperimentParameter( experiment, "T180" ).toDouble();
+    nrepetitions = Settings::getExperimentParameter( experiment, "nRepetitions" ).toInt();
+    bandwidth = Settings::getExperimentParameter( experiment, "BandWidth" ).toInt();
+    samplingrate = Settings::getExperimentParameter( experiment, "SamplingRate" ).toInt();
 
-    taskRepetitions = new TaskRepetitions( "taskRepetitions", tr, nrepetitions );
+    taskRepetitions = new TaskRepetitions( "taskRepetitions", trep, nrepetitions );
     taskRepetitions->createTask();
 
     taskRFGate = new TaskRFGate( "taskRFGate", t90, t180, techo, nechoes );
     taskRFGate->createTask();
 
-    taskAcqGate = new TaskAcquisitionGate( "taskAcqGate", tr, t90, t180, techo, nechoes, nsamples, bandwidth, 0 );
+    taskAcqGate = new TaskAcquisitionGate( "taskAcqGate", trep, t90, t180, techo, nechoes, nsamples, bandwidth, 0 );
     taskAcqGate->createTask();
 
     taskRead = new TaskRead( "taskRead", samplingrate, nsamples, this );
@@ -234,34 +236,64 @@ void SpinEchoThread::startExperiment()
     echoMagnitude = new float64[nechoes * nsamples];
 }
 
+float64 SpinEchoThread::calculateT2()
+{
+    float64 mx = 0;
+    float64 my = 0;
+
+    for ( int i = 0; i < nechoes; i++ )
+    {
+        mx += i * techo;
+        my += log( echoMagnitude[i] );
+    }
+
+    mx = mx / nechoes;
+    my = my / nechoes;
+
+    float64 sum1 = 0;
+    for ( int i = 0; i < nechoes; i++ )
+        sum1 += (i*techo - mx) * (log(echoMagnitude[i]) - my);
+
+    float64 sum2 = 0;
+    for ( int i = 0; i < nechoes; i++ )
+        sum2 += pow( i*techo - mx, 2 );
+
+    qDebug() << "sum1=" << sum1;
+    qDebug() << "sum2=" << sum2;
+
+    float64 t2 = sum1 != 0 ? -sum2/sum1 : 0;
+
+    return t2;
+}
+
 QDialog * SpinEchoThread::getResultDialog()
 {
     if ( nechoes > 1 )
     {
-        float64 mx = 0;
-        float64 my = 0;
+        float64 t2 = calculateT2();
 
-        for ( int i = 0; i < nechoes; i++ )
-        {
-            mx += i * techo;
-            my += log( echoMagnitude[i] );
-        }
+        QDateTime date = QDateTime::currentDateTime();
 
-        mx = mx / nechoes;
-        my = my / nechoes;
+#ifdef LINUX_BOX
+        QString separator = "/";
+#else
+        QString separator = "\\";
+#endif
+        QString header = "";
+        header.append(QString("nechoes=%1\n").arg( nechoes ) );
+        header.append(QString("techo=%1\n").arg( techo ) );
+        header.append(QString("tr=%1\n").arg( trep ) );
+        header.append(QString("t90=%1\n").arg( t90 ) );
+        header.append(QString("t180=%1\n").arg( t180 ) );
+        header.append(QString("nrepetitions=%1\n").arg( nrepetitions ) );
+        header.append(QString("bandwidth=%1\n").arg( bandwidth ) );
+        header.append(QString("samplingrate=%1\n").arg( samplingrate ) );
+        header.append(QString("nsamples=%1\n").arg( nsamples) );
+        header.append(QString("t2=%1\n").arg( t2 ) );
 
-        float64 sum1 = 0;
-        for ( int i = 0; i < nechoes; i++ )
-            sum1 += (i*techo - mx) * (log(echoMagnitude[i]) - my);
-
-        float64 sum2 = 0;
-        for ( int i = 0; i < nechoes; i++ )
-            sum2 += pow( i*techo - mx, 2 );
-
-        qDebug() << "sum1=" << sum1;
-        qDebug() << "sum2=" << sum2;
-
-        float64 t2 = sum1 != 0 ? -sum2/sum1 : 0;
+        writeRawDataFile( QString( "%1%2%3-raw-%4.txt" ).arg(outputDir).arg(separator).arg(name).arg( date.toString("yyyy-MM-dd-hh-mm-ss" ) ), header, data, nsamples );
+        writeFFTDataFile( QString( "%1%2%3-fft-%4.txt" ).arg(outputDir).arg(separator).arg(name).arg( date.toString("yyyy-MM-dd-hh-mm-ss" ) ), header, fft, nsamples );
+        writeEchoMagnitude( QString( "%1%2%3-eco-%4.txt" ).arg(outputDir).arg(separator).arg(name).arg( date.toString("yyyy-MM-dd-hh-mm-ss" ) ), header, echoMagnitude, nechoes );
 
         MessageDialog * dlg = new MessageDialog( parent );
         dlg->initComponents( QString( "T2 = %1" ).arg( t2 ) );
